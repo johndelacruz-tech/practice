@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Question Bank Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .modal-backdrop {
+      background-color: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+  <!-- Initial Loader to prevent sign-in form flash during auth restoration on refresh -->
+  <div id="initialLoader" class="fixed inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+    <p class="text-xs font-semibold text-slate-600">Restoring Session...</p>
+  </div>
+
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-3">
+          <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md">
+            <i class="fa-solid me-0 fa-book-open text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg text-slate-900 leading-tight">EduBank Studio</h1>
+            <p class="text-xs text-slate-500 font-medium">Teacher Question Bank Management</p>
+          </div>
+        </div>
+
+        <!-- Auth Status Controls -->
+        <div id="authHeaderNav" class="hidden flex items-center space-x-4">
+          <div class="text-right hidden sm:block">
+            <span class="block text-xs text-slate-400 font-medium">Logged in as</span>
+            <span id="userEmailDisplay" class="text-sm font-semibold text-slate-700">teacher@school.edu</span>
+          </div>
+          <button id="logoutBtn" class="inline-flex items-center space-x-2 px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition shadow-sm">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <section id="authSection" class="max-w-md mx-auto my-12 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-brand-600 to-blue-700 p-6 text-white text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
+          <i class="fa-solid fa-graduation-cap text-2xl text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold">Teacher Portal</h2>
+        <p class="text-blue-100 text-sm mt-1">Sign in or create an account to manage question banks</p>
+      </div>
+
+      <div class="p-6 sm:p-8">
+        <!-- Auth Tabs -->
+        <div class="flex border-b border-slate-200 mb-6">
+          <button id="tabLoginBtn" class="flex-1 py-2.5 font-semibold text-sm border-b-2 border-brand-600 text-brand-600">
+            Sign In
+          </button>
+          <button id="tabRegisterBtn" class="flex-1 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">
+            Register
+          </button>
+        </div>
+
+        <!-- Auth Alert Box -->
+        <div id="authAlert" class="hidden mb-4 p-3 rounded-lg text-xs font-medium border"></div>
+
+        <!-- Sign In Form -->
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="fa-solid fa-envelope"></i>
+              </span>
+              <input type="email" id="loginEmail" required class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition" placeholder="teacher@school.edu">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input type="password" id="loginPassword" required class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition" placeholder="••••••••">
+            </div>
+          </div>
+          <button type="submit" id="loginSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center space-x-2">
+            <span>Sign In</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="hidden space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="fa-solid fa-envelope"></i>
+              </span>
+              <input type="email" id="regEmail" required class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition" placeholder="teacher@school.edu">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input type="password" id="regPassword" minlength="6" required class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition" placeholder="At least 6 characters">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Confirm Password</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <i class="fa-solid fa-check-double"></i>
+              </span>
+              <input type="password" id="regConfirmPassword" minlength="6" required class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition" placeholder="Repeat password">
+            </div>
+          </div>
+          <button type="submit" id="regSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-md flex items-center justify-center space-x-2">
+            <span>Create Account</span>
+            <i class="fa-solid fa-user-plus text-xs"></i>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="collectionsSection" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Question Collections</h2>
+          <p class="text-sm text-slate-500">Organize your question banks by subject, grade, or assessment topic.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="relative flex-1 sm:w-64">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            </span>
+            <input type="text" id="collectionSearchInput" placeholder="Search collections..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <button id="openAddCollectionBtn" class="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition shadow-md whitespace-nowrap">
+            <i class="fa-solid fa-plus"></i>
+            <span>New Collection</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collections Grid -->
+      <div id="collectionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Collection Cards injected dynamically -->
+      </div>
+
+      <!-- Empty Collections State -->
+      <div id="noCollectionsState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+        <div class="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600">
+          <i class="fa-solid fa-folder-open text-2xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No Question Collections Found</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Get started by creating your first collection to start adding multiple choice questions.</p>
+        <button id="emptyStateAddColBtn" class="mt-4 bg-brand-600 text-white font-semibold px-4 py-2 rounded-lg text-xs hover:bg-brand-700 transition">
+          + Create Collection
+        </button>
+      </div>
+    </section>
+
+    <section id="questionsSection" class="hidden space-y-6">
+      <!-- Top Navigation & Collection Info Header -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <button id="backToCollectionsBtn" class="inline-flex items-center space-x-2 text-slate-600 hover:text-brand-600 text-xs font-semibold transition bg-slate-100 px-3 py-1.5 rounded-lg">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to Collections</span>
+          </button>
+          
+          <div class="flex items-center space-x-2">
+            <button id="openImportCsvBtn" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold px-3 py-2 rounded-xl text-xs transition">
+              <i class="fa-solid fa-file-csv"></i>
+              <span>Import CSV</span>
+            </button>
+            <button id="exportCsvBtn" class="inline-flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold px-3 py-2 rounded-xl text-xs transition">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Export CSV</span>
+            </button>
+            <button id="openAddQuestionBtn" class="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition shadow-md">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add Question</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-3">
+              <h2 id="currentCollectionTitle" class="text-2xl font-bold text-slate-900">Math 101</h2>
+              <span id="questionCountBadge" class="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full">0 Questions</span>
+            </div>
+            <p id="currentCollectionDesc" class="text-xs text-slate-500 mt-1">Collection description goes here...</p>
+          </div>
+
+          <!-- Level Badges Breakdown -->
+          <div class="flex flex-wrap items-center gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Levels:</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-800">L2: <span id="countL2" class="ml-1">0</span></span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-100 text-blue-800">L3: <span id="countL3" class="ml-1">0</span></span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-purple-100 text-purple-800">L4: <span id="countL4" class="ml-1">0</span></span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-100 text-rose-800">L5: <span id="countL5" class="ml-1">0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Level Filter Bar -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-slate-200">
+        <div class="relative flex-1 w-full">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </span>
+          <input type="text" id="questionSearchInput" placeholder="Search question text or options..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <label class="text-xs font-semibold text-slate-500 whitespace-nowrap">Filter Level:</label>
+          <select id="levelFilterSelect" class="bg-slate-50 border border-slate-200 rounded-lg text-xs py-2 px-3 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+            <option value="ALL">All Levels (L2 - L5)</option>
+            <option value="2">Level 2 (Comprehension)</option>
+            <option value="3">Level 3 (Application)</option>
+            <option value="4">Level 4 (Analysis)</option>
+            <option value="5">Level 5 (Synthesis / Evaluation)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Questions List -->
+      <div id="questionsContainer" class="space-y-4">
+        <!-- Dynamic Question Cards -->
+      </div>
+
+      <!-- Empty Questions State -->
+      <div id="noQuestionsState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+          <i class="fa-solid fa-clipboard-question text-2xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No Questions Found</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Create questions manually or use CSV import to quickly populate this collection.</p>
+      </div>
+    </section>
+
+  </main>
+
+  
+  <!-- Collection Add/Edit Modal -->
+  <div id="collectionModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fadeIn">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+        <h3 id="collectionModalTitle" class="text-lg font-bold text-slate-900">Create New Collection</h3>
+        <button id="closeCollectionModalBtn" class="text-slate-400 hover:text-slate-600 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form id="collectionForm" class="space-y-4">
+        <input type="hidden" id="colIdInput">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Collection Title</label>
+          <input type="text" id="colTitleInput" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="e.g. Grade 10 Physics Midterm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description / Notes</label>
+          <textarea id="colDescInput" rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Short description of topics covered..."></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" id="cancelCollectionBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
+          <button type="submit" id="saveCollectionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Collection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Question Add/Edit Modal -->
+  <div id="questionModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 my-8">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+        <h3 id="questionModalTitle" class="text-lg font-bold text-slate-900">Add Multiple Choice Question</h3>
+        <button id="closeQuestionModalBtn" class="text-slate-400 hover:text-slate-600 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form id="questionForm" class="space-y-4">
+        <input type="hidden" id="qIdInput">
+        
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Question Stem / Text</label>
+            <label class="text-xs font-semibold text-brand-600">Cognitive Level (2 - 5)</label>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="md:col-span-3">
+              <textarea id="qTextInput" required rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Enter the main question text..."></textarea>
+            </div>
+            <div class="md:col-span-1">
+              <select id="qLevelInput" required class="w-full bg-slate-50 border border-slate-300 rounded-lg text-sm p-2.5 font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                <option value="2">Level 2 (Comprehension)</option>
+                <option value="3">Level 3 (Application)</option>
+                <option value="4">Level 4 (Analysis)</option>
+                <option value="5">Level 5 (Synthesis/Eval)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Answer Options & Correct Key</label>
+          
+          <!-- Option A -->
+          <div class="flex items-center space-x-2">
+            <input type="radio" name="correctOpt" value="0" id="optRadio0" checked class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <span class="w-6 text-center font-bold text-slate-500 text-xs">A</span>
+            <input type="text" id="optInput0" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option A text">
+          </div>
+
+          <!-- Option B -->
+          <div class="flex items-center space-x-2">
+            <input type="radio" name="correctOpt" value="1" id="optRadio1" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <span class="w-6 text-center font-bold text-slate-500 text-xs">B</span>
+            <input type="text" id="optInput1" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option B text">
+          </div>
+
+          <!-- Option C -->
+          <div class="flex items-center space-x-2">
+            <input type="radio" name="correctOpt" value="2" id="optRadio2" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <span class="w-6 text-center font-bold text-slate-500 text-xs">C</span>
+            <input type="text" id="optInput2" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option C text">
+          </div>
+
+          <!-- Option D -->
+          <div class="flex items-center space-x-2">
+            <input type="radio" name="correctOpt" value="3" id="optRadio3" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <span class="w-6 text-center font-bold text-slate-500 text-xs">D</span>
+            <input type="text" id="optInput3" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option D text">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Explanation / Solution Notes (Optional)</label>
+          <textarea id="qExplanationInput" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Provide feedback or rationales for students/teachers..."></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" id="cancelQuestionBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
+          <button type="submit" id="saveQuestionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CSV Import Modal -->
+  <div id="csvImportModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Batch Import Questions via CSV</h3>
+          <p class="text-xs text-slate-500">Upload multiple choice questions directly into this collection.</p>
+        </div>
+        <button id="closeCsvModalBtn" class="text-slate-400 hover:text-slate-600 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto flex-1 pr-1">
+        <!-- Guidelines & Download Sample -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800">CSV Column Structure Required:</span>
+            <button id="downloadSampleCsvBtn" class="text-brand-600 hover:underline font-semibold flex items-center space-x-1">
+              <i class="fa-solid fa-download"></i>
+              <span>Download Template CSV</span>
+            </button>
+          </div>
+          <p class="font-mono bg-white p-2 rounded border border-slate-200 text-[11px] text-slate-700 overflow-x-auto">
+            Question, Option A, Option B, Option C, Option D, Correct Answer, Level, Explanation
+          </p>
+          <ul class="list-disc pl-4 space-y-0.5 text-[11px] text-slate-500">
+            <li><strong>Correct Answer:</strong> Use <strong>A, B, C, D</strong> or <strong>1, 2, 3, 4</strong>.</li>
+            <li><strong>Level:</strong> Accepts integer values <strong>2, 3, 4, or 5</strong> (defaults to 2 if missing or invalid).</li>
+          </ul>
+        </div>
+
+        <!-- File Upload Area -->
+        <div class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50 hover:bg-blue-50/30" id="dropZone">
+          <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
+          <p class="text-xs font-bold text-slate-700">Click to upload CSV or drag and drop</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">CSV files up to 5MB</p>
+        </div>
+
+        <!-- Preview Table -->
+        <div id="csvPreviewContainer" class="hidden space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700">Preview Parsed Questions (<span id="parsedCount">0</span>)</span>
+            <span id="validBadge" class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Ready to Import</span>
+          </div>
+          <div class="max-h-52 overflow-y-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 border-b border-slate-200 sticky top-0 font-bold text-slate-600">
+                <tr>
+                  <th class="p-2">#</th>
+                  <th class="p-2">Question</th>
+                  <th class="p-2">Key</th>
+                  <th class="p-2">Level</th>
+                </tr>
+              </thead>
+              <tbody id="csvPreviewTableBody" class="divide-y divide-slate-100">
+                <!-- Preview Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 mt-3">
+        <button type="button" id="cancelCsvBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
+        <button type="button" id="confirmImportCsvBtn" disabled class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition shadow-sm flex items-center space-x-2">
+          <i class="fa-solid fa-file-import"></i>
+          <span>Import Questions</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+      </div>
+      <div>
+        <h3 id="confirmModalTitle" class="text-base font-bold text-slate-900">Are you sure?</h3>
+        <p id="confirmModalText" class="text-xs text-slate-500 mt-1">This action cannot be undone.</p>
+      </div>
+      <div class="flex justify-center space-x-3 pt-2">
+        <button id="cancelConfirmBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
+        <button id="proceedConfirmBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      addDoc, 
+      setDoc, 
+      getDoc, 
+      getDocs, 
+      updateDoc, 
+      deleteDoc, 
+      query, 
+      onSnapshot, 
+      writeBatch,
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-ACDtZVCNFUwfi6iS21ftvCU7dKqli3w",
+      authDomain: "practice-2d57a.firebaseapp.com",
+      projectId: "practice-2d57a",
+      storageBucket: "practice-2d57a.firebasestorage.app",
+      messagingSenderId: "690643777336",
+      appId: "1:690643777336:web:f60a6602a87a98f15d33cd",
+      measurementId: "G-HC5LZHK7PP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Enforce local session persistence across browser reloads and iframe embeds
+    setPersistence(auth, browserLocalPersistence).catch((err) => {
+      console.warn("Auth persistence notice:", err);
+    });
+
+    // Global State
+    let currentUser = null;
+    let collectionsList = [];
+    let currentCollectionId = null;
+    let questionsList = [];
+    let unsubscribeCollections = null;
+    let unsubscribeQuestions = null;
+    let pendingConfirmAction = null;
+    let parsedCsvQuestions = [];
+
+    // Toast Notification System
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const bgColors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        warning: 'bg-amber-500 text-white',
+        info: 'bg-brand-600 text-white'
+      };
+      const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-exclamation',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+      };
+
+      toast.className = `flex items-center justify-between p-3.5 rounded-xl shadow-lg text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgColors[type] || bgColors.info}`;
+      toast.innerHTML = `
+        <div class="flex items-center space-x-2.5">
+          <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
+          <span>${escapeHtml(message)}</span>
+        </div>
+        <button class="ml-4 opacity-75 hover:opacity-100 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+
+      const closeBtn = toast.querySelector('button');
+      closeBtn.onclick = () => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      };
+
+      container.appendChild(toast);
+
+      // Trigger enter animation
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+
+      // Auto dismiss after 3.5 seconds
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 300);
+        }
+      }, 3500);
+    }
+
+    // Modal Confirmation Helper
+    function showConfirmModal(title, text, onConfirm) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalText').innerText = text;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    document.getElementById('cancelConfirmBtn')?.addEventListener('click', () => {
+      pendingConfirmAction = null;
+      document.getElementById('confirmModal').classList.add('hidden');
+    });
+
+    document.getElementById('proceedConfirmBtn')?.addEventListener('click', () => {
+      if (typeof pendingConfirmAction === 'function') {
+        pendingConfirmAction();
+      }
+      pendingConfirmAction = null;
+      document.getElementById('confirmModal').classList.add('hidden');
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      const authSection = document.getElementById('authSection');
+      const collectionsSection = document.getElementById('collectionsSection');
+      const questionsSection = document.getElementById('questionsSection');
+      const authHeaderNav = document.getElementById('authHeaderNav');
+      const initialLoader = document.getElementById('initialLoader');
+
+      if (user) {
+        document.getElementById('userEmailDisplay').innerText = user.email;
+        authSection.classList.add('hidden');
+        authHeaderNav.classList.remove('hidden');
+        
+        // Load collections if not currently viewing a specific collection
+        if (!currentCollectionId) {
+          listenToCollections();
+        }
+      } else {
+        // Logged Out
+        if (unsubscribeCollections) unsubscribeCollections();
+        if (unsubscribeQuestions) unsubscribeQuestions();
+        
+        currentCollectionId = null;
+        authHeaderNav.classList.add('hidden');
+        collectionsSection.classList.add('hidden');
+        questionsSection.classList.add('hidden');
+        authSection.classList.remove('hidden');
+      }
+
+      // Hide initial loader once Firebase finishes verifying auth state
+      if (initialLoader) {
+        initialLoader.classList.add('opacity-0');
+        setTimeout(() => {
+          if (initialLoader.parentNode) initialLoader.remove();
+        }, 300);
+      }
+    });
+
+    // Auth Tab Switchers
+    const tabLoginBtn = document.getElementById('tabLoginBtn');
+    const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const authAlert = document.getElementById('authAlert');
+
+    tabLoginBtn.addEventListener('click', () => {
+      tabLoginBtn.className = "flex-1 py-2.5 font-semibold text-sm border-b-2 border-brand-600 text-brand-600";
+      tabRegisterBtn.className = "flex-1 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+      authAlert.classList.add('hidden');
+    });
+
+    tabRegisterBtn.addEventListener('click', () => {
+      tabRegisterBtn.className = "flex-1 py-2.5 font-semibold text-sm border-b-2 border-brand-600 text-brand-600";
+      tabLoginBtn.className = "flex-1 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+      authAlert.classList.add('hidden');
+    });
+
+    function showAuthError(msg) {
+      authAlert.className = "mb-4 p-3 rounded-lg text-xs font-medium border bg-rose-50 border-rose-200 text-rose-700 block";
+      authAlert.innerText = msg;
+    }
+
+    // Login Form Handler
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        showToast('Successfully signed in!', 'success');
+      } catch (err) {
+        showAuthError(err.message || 'Failed to sign in. Please check credentials.');
+      }
+    });
+
+    // Register Form Handler
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+      const confirmPass = document.getElementById('regConfirmPassword').value.trim();
+
+      if (password !== confirmPass) {
+        showAuthError('Passwords do not match.');
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        showToast('Account created successfully!', 'success');
+      } catch (err) {
+        showAuthError(err.message || 'Registration failed.');
+      }
+    });
+
+    // Logout Handler
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      showToast('Signed out successfully.', 'info');
+    });
+
+
+    function listenToCollections() {
+      if (!currentUser) return;
+
+      const collectionsRef = collection(db, 'teachers', currentUser.uid, 'collections');
+      
+      unsubscribeCollections = onSnapshot(collectionsRef, (snapshot) => {
+        collectionsList = [];
+        snapshot.forEach((docSnap) => {
+          collectionsList.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Sort by creation date descending
+        collectionsList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        renderCollections();
+      }, (error) => {
+        showToast('Error loading collections: ' + error.message, 'error');
+      });
+    }
+
+    function renderCollections() {
+      const collectionsSection = document.getElementById('collectionsSection');
+      const questionsSection = document.getElementById('questionsSection');
+      const collectionsGrid = document.getElementById('collectionsGrid');
+      const noCollectionsState = document.getElementById('noCollectionsState');
+      const searchVal = document.getElementById('collectionSearchInput').value.toLowerCase();
+
+      if (currentCollectionId === null) {
+        collectionsSection.classList.remove('hidden');
+        questionsSection.classList.add('hidden');
+      }
+
+      const filtered = collectionsList.filter(col => 
+        col.title.toLowerCase().includes(searchVal) || 
+        (col.description && col.description.toLowerCase().includes(searchVal))
+      );
+
+      collectionsGrid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        noCollectionsState.classList.remove('hidden');
+      } else {
+        noCollectionsState.classList.add('hidden');
+
+        filtered.forEach(col => {
+          const card = document.createElement('div');
+          card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between group";
+          card.innerHTML = `
+            <div>
+              <div class="flex items-start justify-between">
+                <span class="p-2.5 bg-brand-50 text-brand-600 rounded-xl group-hover:bg-brand-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-folder font-bold text-lg"></i>
+                </span>
+                <div class="flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition">
+                  <button class="edit-col-btn p-1.5 text-slate-400 hover:text-brand-600 hover:bg-slate-100 rounded-lg text-xs" data-id="${col.id}" title="Edit Collection">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button class="delete-col-btn p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg text-xs" data-id="${col.id}" title="Delete Collection">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="font-bold text-base text-slate-900 mt-3 line-clamp-1">${escapeHtml(col.title)}</h3>
+              <p class="text-xs text-slate-500 mt-1 line-clamp-2 h-8">${escapeHtml(col.description || 'No description provided.')}</p>
+            </div>
+            
+            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[11px] text-slate-400 font-medium">Multiple Choice Questions</span>
+              <button class="open-col-btn bg-slate-100 hover:bg-brand-600 hover:text-white text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs transition" data-id="${col.id}">
+                Open Collection <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+            </div>
+          `;
+          collectionsGrid.appendChild(card);
+        });
+
+        // Event listeners on cards
+        document.querySelectorAll('.open-col-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            openCollectionDetail(id);
+          });
+        });
+
+        document.querySelectorAll('.edit-col-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const col = collectionsList.find(c => c.id === id);
+            if (col) openCollectionModal(col);
+          });
+        });
+
+        document.querySelectorAll('.delete-col-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            showConfirmModal('Delete Collection', 'This will delete the collection and all questions inside it.', () => {
+              deleteCollection(id);
+            });
+          });
+        });
+      }
+    }
+
+    document.getElementById('collectionSearchInput').addEventListener('input', renderCollections);
+
+    // Collection Modals & Actions
+    const collectionModal = document.getElementById('collectionModal');
+    const collectionForm = document.getElementById('collectionForm');
+
+    function openCollectionModal(col = null) {
+      document.getElementById('colIdInput').value = col ? col.id : '';
+      document.getElementById('colTitleInput').value = col ? col.title : '';
+      document.getElementById('colDescInput').value = col ? (col.description || '') : '';
+      document.getElementById('collectionModalTitle').innerText = col ? 'Edit Collection' : 'Create New Collection';
+      collectionModal.classList.remove('hidden');
+    }
+
+    document.getElementById('openAddCollectionBtn').addEventListener('click', () => openCollectionModal());
+    document.getElementById('emptyStateAddColBtn').addEventListener('click', () => openCollectionModal());
+    document.getElementById('closeCollectionModalBtn').addEventListener('click', () => collectionModal.classList.add('hidden'));
+    document.getElementById('cancelCollectionBtn').addEventListener('click', () => collectionModal.classList.add('hidden'));
+
+    collectionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const colId = document.getElementById('colIdInput').value;
+      const title = document.getElementById('colTitleInput').value.trim();
+      const description = document.getElementById('colDescInput').value.trim();
+
+      try {
+        if (colId) {
+          // Update
+          const colRef = doc(db, 'teachers', currentUser.uid, 'collections', colId);
+          await updateDoc(colRef, { title, description, updatedAt: serverTimestamp() });
+          showToast('Collection updated.', 'success');
+        } else {
+          // Add
+          const colRef = collection(db, 'teachers', currentUser.uid, 'collections');
+          await addDoc(colRef, { title, description, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+          showToast('Collection created.', 'success');
+        }
+        collectionModal.classList.add('hidden');
+      } catch (err) {
+        showToast('Failed to save collection: ' + err.message, 'error');
+      }
+    });
+
+    async function deleteCollection(colId) {
+      if (!currentUser) return;
+      try {
+        const colRef = doc(db, 'teachers', currentUser.uid, 'collections', colId);
+        await deleteDoc(colRef);
+        showToast('Collection deleted.', 'info');
+      } catch (err) {
+        showToast('Error deleting collection: ' + err.message, 'error');
+      }
+    }
+
+
+    function openCollectionDetail(colId) {
+      currentCollectionId = colId;
+      const col = collectionsList.find(c => c.id === colId);
+
+      if (!col) return;
+
+      document.getElementById('currentCollectionTitle').innerText = col.title;
+      document.getElementById('currentCollectionDesc').innerText = col.description || 'No description available.';
+
+      document.getElementById('collectionsSection').classList.add('hidden');
+      document.getElementById('questionsSection').classList.remove('hidden');
+
+      listenToQuestions(colId);
+    }
+
+    document.getElementById('backToCollectionsBtn').addEventListener('click', () => {
+      currentCollectionId = null;
+      if (unsubscribeQuestions) unsubscribeQuestions();
+      document.getElementById('questionsSection').classList.add('hidden');
+      document.getElementById('collectionsSection').classList.remove('hidden');
+    });
+
+    function listenToQuestions(colId) {
+      if (!currentUser || !colId) return;
+
+      if (unsubscribeQuestions) unsubscribeQuestions();
+
+      const questionsRef = collection(db, 'teachers', currentUser.uid, 'collections', colId, 'questions');
+      
+      unsubscribeQuestions = onSnapshot(questionsRef, (snapshot) => {
+        questionsList = [];
+        snapshot.forEach((docSnap) => {
+          questionsList.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Sort by level ascending, then createdAt
+        questionsList.sort((a, b) => (a.level || 2) - (b.level || 2));
+
+        renderQuestions();
+      }, (error) => {
+        showToast('Error loading questions: ' + error.message, 'error');
+      });
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      const noQuestionsState = document.getElementById('noQuestionsState');
+      const searchVal = document.getElementById('questionSearchInput').value.toLowerCase();
+      const levelFilter = document.getElementById('levelFilterSelect').value;
+
+      // Calculate Stats
+      const countL2 = questionsList.filter(q => Number(q.level) === 2).length;
+      const countL3 = questionsList.filter(q => Number(q.level) === 3).length;
+      const countL4 = questionsList.filter(q => Number(q.level) === 4).length;
+      const countL5 = questionsList.filter(q => Number(q.level) === 5).length;
+
+      document.getElementById('countL2').innerText = countL2;
+      document.getElementById('countL3').innerText = countL3;
+      document.getElementById('countL4').innerText = countL4;
+      document.getElementById('countL5').innerText = countL5;
+      document.getElementById('questionCountBadge').innerText = `${questionsList.length} Question${questionsList.length === 1 ? '' : 's'}`;
+
+      const filtered = questionsList.filter(q => {
+        const matchesSearch = q.questionText.toLowerCase().includes(searchVal) ||
+          (q.options && q.options.some(opt => opt.toLowerCase().includes(searchVal)));
+        const matchesLevel = levelFilter === 'ALL' || String(q.level) === levelFilter;
+        return matchesSearch && matchesLevel;
+      });
+
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        noQuestionsState.classList.remove('hidden');
+      } else {
+        noQuestionsState.classList.add('hidden');
+
+        const levelBadgeStyles = {
+          2: 'bg-amber-100 text-amber-800 border-amber-200',
+          3: 'bg-blue-100 text-blue-800 border-blue-200',
+          4: 'bg-purple-100 text-purple-800 border-purple-200',
+          5: 'bg-rose-100 text-rose-800 border-rose-200'
+        };
+
+        const levelNames = {
+          2: 'Level 2 (Comprehension)',
+          3: 'Level 3 (Application)',
+          4: 'Level 4 (Analysis)',
+          5: 'Level 5 (Synthesis/Evaluation)'
+        };
+
+        filtered.forEach((q, idx) => {
+          const card = document.createElement('div');
+          card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3";
+
+          const correctIdx = Number(q.correctAnswer);
+          
+          let optionsHtml = '';
+          if (q.options && Array.isArray(q.options)) {
+            const letters = ['A', 'B', 'C', 'D'];
+            optionsHtml = q.options.map((opt, i) => {
+              const isCorrect = i === correctIdx;
+              return `
+                <div class="flex items-start space-x-2 p-2 rounded-lg text-xs font-medium ${isCorrect ? 'bg-emerald-50 border border-emerald-200 text-emerald-900 font-semibold' : 'bg-slate-50 border border-slate-100 text-slate-700'}">
+                  <span class="px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'} font-bold">${letters[i]}</span>
+                  <span class="pt-0.5 flex-1">${escapeHtml(opt)}</span>
+                  ${isCorrect ? '<i class="fa-solid fa-circle-check text-emerald-600 text-sm mt-0.5 ml-1"></i>' : ''}
+                </div>
+              `;
+            }).join('');
+          }
+
+          const badgeStyle = levelBadgeStyles[q.level] || levelBadgeStyles[2];
+          const levelLabel = levelNames[q.level] || 'Level ' + q.level;
+
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${badgeStyle}">
+                  ${levelLabel}
+                </span>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button class="edit-q-btn p-1.5 text-slate-400 hover:text-brand-600 hover:bg-slate-100 rounded-lg text-xs" data-id="${q.id}">
+                  <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <button class="delete-q-btn p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg text-xs" data-id="${q.id}">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+
+            <div class="text-sm font-semibold text-slate-800 leading-relaxed">
+              ${escapeHtml(q.questionText)}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              ${optionsHtml}
+            </div>
+
+            ${q.explanation ? `
+              <div class="bg-amber-50/60 p-2.5 rounded-lg border border-amber-100 text-xs text-amber-900 flex items-start space-x-2">
+                <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                <div>
+                  <span class="font-bold block">Explanation:</span>
+                  <span>${escapeHtml(q.explanation)}</span>
+                </div>
+              </div>
+            ` : ''}
+          `;
+
+          container.appendChild(card);
+        });
+
+        // Add event listeners for Edit / Delete
+        document.querySelectorAll('.edit-q-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const q = questionsList.find(item => item.id === id);
+            if (q) openQuestionModal(q);
+          });
+        });
+
+        document.querySelectorAll('.delete-q-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            showConfirmModal('Delete Question', 'Are you sure you want to remove this question?', () => {
+              deleteQuestion(id);
+            });
+          });
+        });
+      }
+    }
+
+    document.getElementById('questionSearchInput').addEventListener('input', renderQuestions);
+    document.getElementById('levelFilterSelect').addEventListener('change', renderQuestions);
+
+    // Question Modal & Form Actions
+    const questionModal = document.getElementById('questionModal');
+    const questionForm = document.getElementById('questionForm');
+
+    function openQuestionModal(q = null) {
+      document.getElementById('qIdInput').value = q ? q.id : '';
+      document.getElementById('qTextInput').value = q ? q.questionText : '';
+      document.getElementById('qLevelInput').value = q ? (q.level || 2) : 2;
+      
+      const options = q && q.options ? q.options : ['', '', '', ''];
+      document.getElementById('optInput0').value = options[0] || '';
+      document.getElementById('optInput1').value = options[1] || '';
+      document.getElementById('optInput2').value = options[2] || '';
+      document.getElementById('optInput3').value = options[3] || '';
+
+      const correctIdx = q ? (q.correctAnswer || 0) : 0;
+      document.getElementById(`optRadio${correctIdx}`).checked = true;
+
+      document.getElementById('qExplanationInput').value = q ? (q.explanation || '') : '';
+      document.getElementById('questionModalTitle').innerText = q ? 'Edit Question' : 'Add Multiple Choice Question';
+
+      questionModal.classList.remove('hidden');
+    }
+
+    document.getElementById('openAddQuestionBtn').addEventListener('click', () => openQuestionModal());
+    document.getElementById('closeQuestionModalBtn').addEventListener('click', () => questionModal.classList.add('hidden'));
+    document.getElementById('cancelQuestionBtn').addEventListener('click', () => questionModal.classList.add('hidden'));
+
+    questionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser || !currentCollectionId) return;
+
+      const qId = document.getElementById('qIdInput').value;
+      const questionText = document.getElementById('qTextInput').value.trim();
+      const level = parseInt(document.getElementById('qLevelInput').value, 10);
+      const options = [
+        document.getElementById('optInput0').value.trim(),
+        document.getElementById('optInput1').value.trim(),
+        document.getElementById('optInput2').value.trim(),
+        document.getElementById('optInput3').value.trim()
+      ];
+      
+      const correctRadio = document.querySelector('input[name="correctOpt"]:checked');
+      const correctAnswer = correctRadio ? parseInt(correctRadio.value, 10) : 0;
+      const explanation = document.getElementById('qExplanationInput').value.trim();
+
+      try {
+        const qRef = collection(db, 'teachers', currentUser.uid, 'collections', currentCollectionId, 'questions');
+        if (qId) {
+          const singleRef = doc(db, 'teachers', currentUser.uid, 'collections', currentCollectionId, 'questions', qId);
+          await updateDoc(singleRef, { questionText, level, options, correctAnswer, explanation, updatedAt: serverTimestamp() });
+          showToast('Question updated.', 'success');
+        } else {
+          await addDoc(qRef, { questionText, level, options, correctAnswer, explanation, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+          showToast('Question added.', 'success');
+        }
+        questionModal.classList.add('hidden');
+      } catch (err) {
+        showToast('Error saving question: ' + err.message, 'error');
+      }
+    });
+
+    async function deleteQuestion(qId) {
+      if (!currentUser || !currentCollectionId) return;
+      try {
+        const qRef = doc(db, 'teachers', currentUser.uid, 'collections', currentCollectionId, 'questions', qId);
+        await deleteDoc(qRef);
+        showToast('Question deleted.', 'info');
+      } catch (err) {
+        showToast('Error deleting question: ' + err.message, 'error');
+      }
+    }
+
+
+    const csvImportModal = document.getElementById('csvImportModal');
+    const dropZone = document.getElementById('dropZone');
+    const csvFileInput = document.getElementById('csvFileInput');
+    const confirmImportCsvBtn = document.getElementById('confirmImportCsvBtn');
+
+    document.getElementById('openImportCsvBtn').addEventListener('click', () => {
+      parsedCsvQuestions = [];
+      csvFileInput.value = '';
+      document.getElementById('csvPreviewContainer').classList.add('hidden');
+      confirmImportCsvBtn.disabled = true;
+      csvImportModal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeCsvModalBtn').addEventListener('click', () => csvImportModal.classList.add('hidden'));
+    document.getElementById('cancelCsvBtn').addEventListener('click', () => csvImportModal.classList.add('hidden'));
+
+    dropZone.addEventListener('click', () => csvFileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-brand-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-brand-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-brand-500', 'bg-blue-50');
+      if (e.dataTransfer.files.length) {
+        csvFileInput.files = e.dataTransfer.files;
+        handleCsvFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    csvFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        handleCsvFile(e.target.files[0]);
+      }
+    });
+
+    function handleCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        parseCSVText(text);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCSVText(csvText) {
+      const lines = csvText.split(/\r\n|\n/);
+      if (lines.length < 2) {
+        showToast('CSV file is empty or missing headers.', 'warning');
+        return;
+      }
+
+      parsedCsvQuestions = [];
+      // CSV Line parser that handles quotes
+      const parseRow = (line) => {
+        const result = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            result.push(cur.trim().replace(/^"|"$/g, ''));
+            cur = '';
+          } else {
+            cur += char;
+          }
+        }
+        result.push(cur.trim().replace(/^"|"$/g, ''));
+        return result;
+      };
+
+      // Skip header row
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const row = parseRow(lines[i]);
+
+        if (row.length >= 5) {
+          const questionText = row[0] || '';
+          const optA = row[1] || '';
+          const optB = row[2] || '';
+          const optC = row[3] || '';
+          const optD = row[4] || '';
+          
+          let rawKey = (row[5] || 'A').toUpperCase().trim();
+          let keyIndex = 0;
+          if (rawKey === 'B' || rawKey === '2') keyIndex = 1;
+          else if (rawKey === 'C' || rawKey === '3') keyIndex = 2;
+          else if (rawKey === 'D' || rawKey === '4') keyIndex = 3;
+
+          let rawLevel = parseInt(row[6], 10);
+          if (isNaN(rawLevel) || rawLevel < 2 || rawLevel > 5) {
+            rawLevel = 2; // Default to Level 2
+          }
+
+          const explanation = row[7] || '';
+
+          if (questionText && optA && optB) {
+            parsedCsvQuestions.push({
+              questionText,
+              options: [optA, optB, optC, optD],
+              correctAnswer: keyIndex,
+              level: rawLevel,
+              explanation
+            });
+          }
+        }
+      }
+
+      renderCsvPreview();
+    }
+
+    function renderCsvPreview() {
+      const tbody = document.getElementById('csvPreviewTableBody');
+      const previewContainer = document.getElementById('csvPreviewContainer');
+      const countSpan = document.getElementById('parsedCount');
+
+      tbody.innerHTML = '';
+      countSpan.innerText = parsedCsvQuestions.length;
+
+      if (parsedCsvQuestions.length > 0) {
+        previewContainer.classList.remove('hidden');
+        confirmImportCsvBtn.disabled = false;
+
+        const keyLetters = ['A', 'B', 'C', 'D'];
+        parsedCsvQuestions.forEach((q, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50";
+          tr.innerHTML = `
+            <td class="p-2 font-bold text-slate-400">${idx + 1}</td>
+            <td class="p-2 font-medium text-slate-800 truncate max-w-xs">${escapeHtml(q.questionText)}</td>
+            <td class="p-2 font-bold text-emerald-600">${keyLetters[q.correctAnswer]}</td>
+            <td class="p-2 font-semibold text-slate-600">L${q.level}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        previewContainer.classList.add('hidden');
+        confirmImportCsvBtn.disabled = true;
+        showToast('No valid questions found in CSV.', 'warning');
+      }
+    }
+
+    // Batch Import into Firestore
+    confirmImportCsvBtn.addEventListener('click', async () => {
+      if (!currentUser || !currentCollectionId || parsedCsvQuestions.length === 0) return;
+
+      confirmImportCsvBtn.disabled = true;
+      confirmImportCsvBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+      try {
+        const batch = writeBatch(db);
+        const questionsRef = collection(db, 'teachers', currentUser.uid, 'collections', currentCollectionId, 'questions');
+
+        parsedCsvQuestions.forEach((q) => {
+          const newDocRef = doc(questionsRef);
+          batch.set(newDocRef, {
+            ...q,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        });
+
+        await batch.commit();
+        showToast(`Successfully imported ${parsedCsvQuestions.length} questions!`, 'success');
+        csvImportModal.classList.add('hidden');
+      } catch (err) {
+        showToast('Batch import failed: ' + err.message, 'error');
+      } finally {
+        confirmImportCsvBtn.disabled = false;
+        confirmImportCsvBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> <span>Import Questions</span>';
+      }
+    });
+
+    // Sample CSV Generator
+    document.getElementById('downloadSampleCsvBtn').addEventListener('click', () => {
+      const sampleContent = `Question,Option A,Option B,Option C,Option D,Correct Answer,Level,Explanation
+"What is the derivative of x^2 with respect to x?","x","2x","2","x^2",B,2,"Use the power rule: d/dx(x^n) = n*x^(n-1)"
+"Which process describes cellular energy production in mitochondria?","Glycolysis","Krebs Cycle","Oxidative Phosphorylation","Photosynthesis",C,3,"Oxidative phosphorylation produces the bulk of ATP in mitochondria."
+"Analyze the effect of fiscal policy expansion on interest rates.","Rates decrease","Rates increase","No impact","Inflation drops instantly",B,4,"Expansionary fiscal policy increases demand for loanable funds."
+"Evaluate the reliability of a randomized double-blind control trial.","High validity","Low validity","No control","Unethical",A,5,"Double-blind RCTs minimize observer and participant bias."`;
+
+      downloadBlob(sampleContent, 'question_bank_template.csv', 'text/csv');
+    });
+
+    // Export Questions to CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      if (questionsList.length === 0) {
+        showToast('No questions to export.', 'warning');
+        return;
+      }
+
+      const keyLetters = ['A', 'B', 'C', 'D'];
+      let csvContent = 'Question,Option A,Option B,Option C,Option D,Correct Answer,Level,Explanation\n';
+
+      questionsList.forEach(q => {
+        const escapeCsv = (str) => `"${(str || '').replace(/"/g, '""')}"`;
+        const optA = q.options ? q.options[0] : '';
+        const optB = q.options ? q.options[1] : '';
+        const optC = q.options ? q.options[2] : '';
+        const optD = q.options ? q.options[3] : '';
+        const key = keyLetters[q.correctAnswer] || 'A';
+
+        csvContent += `${escapeCsv(q.questionText)},${escapeCsv(optA)},${escapeCsv(optB)},${escapeCsv(optC)},${escapeCsv(optD)},${key},${q.level || 2},${escapeCsv(q.explanation)}\n`;
+      });
+
+      const colTitle = document.getElementById('currentCollectionTitle').innerText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadBlob(csvContent, `${colTitle}_questions.csv`, 'text/csv');
+      showToast('Questions exported to CSV!', 'success');
+    });
+
+    function downloadBlob(content, filename, contentType) {
+      const blob = new Blob([content], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
