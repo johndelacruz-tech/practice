@@ -494,21 +494,33 @@
         </button>
       </div>
 
-      <!-- Controls to generate room codes -->
-      <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100 mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span class="block text-xs font-bold text-indigo-900">Generate Student Room Codes</span>
-          <span class="text-[11px] text-indigo-700">Each code supports exactly 1 pair of students (Player X vs Player O).</span>
+      <!-- Question Mode + Generate room codes -->
+      <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100 mb-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span class="block text-xs font-bold text-indigo-900">Question Trigger Mode</span>
+            <span class="text-[11px] text-indigo-700">Applies to all newly created room codes.</span>
+          </div>
+          <select id="teacherQuestionModeSelect" class="text-xs font-semibold bg-white border border-indigo-200 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
+            <option value="winOnly" selected>🏆 Win Opportunity Only</option>
+            <option value="allMoves">📝 Every Move</option>
+          </select>
         </div>
-        <div class="flex items-center space-x-2">
-          <button id="createSingleRoomBtn" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
-            <i class="fa-solid fa-plus"></i>
-            <span>+1 Room Code</span>
-          </button>
-          <button id="createBatch5RoomsBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
-            <i class="fa-solid fa-layer-group"></i>
-            <span>+5 Room Codes</span>
-          </button>
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-indigo-100">
+          <div>
+            <span class="block text-xs font-bold text-indigo-900">Generate Student Room Codes</span>
+            <span class="text-[11px] text-indigo-700">Each code supports exactly 1 pair of students (Player X vs Player O).</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="createSingleRoomBtn" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-plus"></i>
+              <span>+1 Room Code</span>
+            </button>
+            <button id="createBatch5RoomsBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-layer-group"></i>
+              <span>+5 Room Codes</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -625,15 +637,14 @@
         </div>
       </div>
 
-      <!-- Question Trigger Settings Bar -->
+      <!-- Question Trigger (teacher-controlled, read-only) -->
       <div class="flex items-center justify-between mb-4 px-1 bg-slate-50/80 p-2 rounded-xl border border-slate-200">
         <label class="text-[11px] font-bold text-slate-600 flex items-center gap-1">
           <i class="fa-solid fa-bolt text-amber-500"></i> Question Trigger:
         </label>
-        <select id="tttQuestionMode" class="text-xs font-semibold bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
-          <option value="winOnly" selected>🏆 Win Opportunity Only</option>
-          <option value="allMoves">📝 Every Move</option>
-        </select>
+        <span id="tttQuestionModeDisplay" class="text-xs font-semibold bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700">
+          🏆 Win Opportunity Only
+        </span>
       </div>
 
       <!-- Tic-Tac-Toe Grid -->
@@ -1644,8 +1655,19 @@
           const p1Name = r.playerX ? r.playerX.name : '<i>Empty (Player X)</i>';
           const p2Name = r.playerO ? r.playerO.name : '<i>Empty (Player O)</i>';
 
+          const avgLevel = (side) => {
+            const s = r.levelStats && r.levelStats[side];
+            if (!s || !s.count) return '—';
+            return (s.totalLevel / s.count).toFixed(1);
+          };
+          const avgX = avgLevel('X');
+          const avgO = avgLevel('O');
+          const modeLabel = r.questionMode === 'allMoves' ? '📝 Every Move' : '🏆 Win Only';
+
           let statusBadge = '';
-          if (r.playerX && r.playerO) {
+          if (r.sessionEnded) {
+            statusBadge = '<span class="bg-slate-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Ended</span>';
+          } else if (r.playerX && r.playerO) {
             statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">2/2 Players (In Progress)</span>';
           } else if (r.playerX || r.playerO) {
             statusBadge = '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">1/2 Players Joined</span>';
@@ -1660,6 +1682,10 @@
                 <span class="text-xl font-black text-indigo-900 font-mono tracking-widest">${r.code}</span>
               </div>
               ${statusBadge}
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">${modeLabel}</span>
             </div>
 
             <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs space-y-1">
@@ -1677,11 +1703,27 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1">
+            <div class="bg-amber-50/80 border border-amber-100 rounded-lg p-2 text-[11px] space-y-1">
+              <div class="font-bold text-amber-900 flex items-center gap-1">
+                <i class="fa-solid fa-chart-line text-amber-600"></i> Avg Question Level
+              </div>
+              <div class="flex justify-between text-slate-700">
+                <span>Player X: <strong class="text-indigo-700">${avgX}</strong></span>
+                <span>Player O: <strong class="text-rose-700">${avgO}</strong></span>
+              </div>
+              <p class="text-[10px] text-slate-500">Based on levels answered correctly (L2–L5).</p>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 gap-1 flex-wrap">
               <button class="copy-code-btn px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition" data-code="${r.code}">
                 <i class="fa-solid fa-copy mr-1"></i> Copy Code
               </button>
               <div class="flex items-center space-x-1">
+                ${!r.sessionEnded ? `
+                <button class="end-session-btn px-2 py-1 bg-slate-800 hover:bg-slate-900 text-white font-bold text-[11px] rounded-lg transition" data-id="${r.id}" title="End Session">
+                  <i class="fa-solid fa-flag-checkered mr-1"></i> End
+                </button>` : `
+                <span class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[11px] rounded-lg">Session Ended</span>`}
                 <button class="reset-room-btn p-1.5 text-slate-400 hover:text-amber-600 rounded-lg text-xs" data-id="${r.id}" title="Reset Board">
                   <i class="fa-solid fa-rotate-right"></i>
                 </button>
@@ -1725,6 +1767,20 @@
             showToast('Room removed.', 'info');
           });
         });
+
+        document.querySelectorAll('.end-session-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.dataset.id;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', id);
+            await updateDoc(ref, {
+              sessionEnded: true,
+              status: 'ended',
+              currentChallenge: null,
+              updatedAt: serverTimestamp()
+            });
+            showToast('Session ended. Average levels are shown on the card.', 'success');
+          });
+        });
       }
     }
 
@@ -1735,6 +1791,8 @@
         const code = generateRoomCode();
         const colTitle = document.getElementById('currentCollectionTitle').innerText || 'Question Bank';
         const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions');
+        const modeSelect = document.getElementById('teacherQuestionModeSelect');
+        const questionMode = modeSelect ? modeSelect.value : 'winOnly';
 
         await addDoc(sessionsRef, {
           code,
@@ -1748,12 +1806,19 @@
           turn: 'X',
           board: Array(9).fill(null),
           scores: { X: 0, O: 0 },
+          // Tracks sum of levels answered correctly + attempt count → average level
+          levelStats: {
+            X: { totalLevel: 0, count: 0 },
+            O: { totalLevel: 0, count: 0 }
+          },
+          questionMode,
+          sessionEnded: false,
           currentChallenge: null,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
 
-        showToast(`Created Game Room Code: ${code}`, 'success');
+        showToast(`Created Game Room Code: ${code} (${questionMode === 'allMoves' ? 'Every Move' : 'Win Only'})`, 'success');
       } catch (err) {
         showToast('Error creating room: ' + err.message, 'error');
       }
@@ -1916,6 +1981,21 @@
       document.getElementById('displayRoomCode').innerText = s.code || 'XXXXXX';
       document.getElementById('tttCollectionSubtitle').innerText = `Subject: ${s.collectionTitle || 'Question Bank'}`;
 
+      const modeDisplay = document.getElementById('tttQuestionModeDisplay');
+      if (modeDisplay) {
+        modeDisplay.innerText = s.questionMode === 'allMoves' ? '📝 Every Move' : '🏆 Win Opportunity Only';
+      }
+
+      if (s.sessionEnded) {
+        if (unsubscribeSession) {
+          unsubscribeSession();
+          unsubscribeSession = null;
+        }
+        document.getElementById('ticTacToeModal').classList.add('hidden');
+        showToast('Teacher has ended this session. Thanks for playing!', 'info');
+        return;
+      }
+
       const myRoleBadge = document.getElementById('myRoleBadge');
       if (myRole === 'X') {
         myRoleBadge.className = "px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow-sm";
@@ -2045,9 +2125,13 @@
       }
 
       tttPendingCell = cellIdx;
+
+      if (currentSessionData.sessionEnded) {
+        showToast('This session has ended.', 'warning');
+        return;
+      }
       
-      const modeSelect = document.getElementById('tttQuestionMode');
-      const mode = modeSelect ? modeSelect.value : 'winOnly';
+      const mode = currentSessionData.questionMode || 'winOnly';
       const isWinOpportunity = wouldWin(tttBoard, cellIdx, tttCurrentPlayer);
 
       if (mode === 'winOnly' && !isWinOpportunity) {
@@ -2162,8 +2246,10 @@
         feedback.className = "p-2 rounded-lg text-xs font-bold text-center mt-2 bg-emerald-100 text-emerald-800 border border-emerald-200";
         feedback.innerText = "Correct! Square claimed.";
 
+        // Record the level answered correctly for average-level stats
+        const answeredLevel = Number(tttCurrentQuestion.level || tttCurrentLevel || 2);
         setTimeout(async () => {
-          await claimSquare(tttPendingCell);
+          await claimSquare(tttPendingCell, answeredLevel);
         }, 1000);
       } else {
         if (tttCurrentLevel > 2) {
@@ -2191,11 +2277,11 @@
       }
     }
 
-    async function claimSquare(cellIdx) {
+    async function claimSquare(cellIdx, answeredLevel = null) {
       const updatedBoard = [...tttBoard];
       updatedBoard[cellIdx] = tttCurrentPlayer;
 
-      const newScores = { ...currentSessionData.scores };
+      const newScores = { ...(currentSessionData.scores || { X: 0, O: 0 }) };
       let nextTurn = tttCurrentPlayer === 'X' ? 'O' : 'X';
 
       const isWinner = winningCombos.some(combo => {
@@ -2208,14 +2294,33 @@
         showToast(`Player ${tttCurrentPlayer} (${myStudentName}) wins the round!`, 'success');
       }
 
-      const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
-      await updateDoc(sessionDocRef, {
+      const payload = {
         board: updatedBoard,
         scores: newScores,
         turn: nextTurn,
         currentChallenge: null,
         updatedAt: serverTimestamp()
-      });
+      };
+
+      // Update average-level stats when a question was answered correctly
+      if (answeredLevel != null) {
+        const stats = currentSessionData.levelStats || {
+          X: { totalLevel: 0, count: 0 },
+          O: { totalLevel: 0, count: 0 }
+        };
+        const side = tttCurrentPlayer;
+        const prev = stats[side] || { totalLevel: 0, count: 0 };
+        payload.levelStats = {
+          ...stats,
+          [side]: {
+            totalLevel: (prev.totalLevel || 0) + Number(answeredLevel),
+            count: (prev.count || 0) + 1
+          }
+        };
+      }
+
+      const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
+      await updateDoc(sessionDocRef, payload);
     }
   </script>
 </body>
