@@ -1660,8 +1660,14 @@
             if (!s || !s.count) return '—';
             return (s.totalLevel / s.count).toFixed(1);
           };
+          const countLevel = (side) => {
+            const s = r.levelStats && r.levelStats[side];
+            return (s && s.count) ? s.count : 0;
+          };
           const avgX = avgLevel('X');
           const avgO = avgLevel('O');
+          const countX = countLevel('X');
+          const countO = countLevel('O');
           const modeLabel = r.questionMode === 'allMoves' ? '📝 Every Move' : '🏆 Win Only';
 
           let statusBadge = '';
@@ -1703,15 +1709,23 @@
               </div>
             </div>
 
-            <div class="bg-amber-50/80 border border-amber-100 rounded-lg p-2 text-[11px] space-y-1">
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-[11px] space-y-1.5">
               <div class="font-bold text-amber-900 flex items-center gap-1">
-                <i class="fa-solid fa-chart-line text-amber-600"></i> Avg Question Level
+                <i class="fa-solid fa-chart-line text-amber-600"></i> Avg Level (correct answers)
               </div>
-              <div class="flex justify-between text-slate-700">
-                <span>Player X: <strong class="text-indigo-700">${avgX}</strong></span>
-                <span>Player O: <strong class="text-rose-700">${avgO}</strong></span>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-white rounded-md p-1.5 border border-indigo-100 text-center">
+                  <div class="text-[10px] text-slate-500 font-semibold">Player X</div>
+                  <div class="text-base font-black text-indigo-700">${avgX}</div>
+                  <div class="text-[10px] text-slate-400">${countX} correct</div>
+                </div>
+                <div class="bg-white rounded-md p-1.5 border border-rose-100 text-center">
+                  <div class="text-[10px] text-slate-500 font-semibold">Player O</div>
+                  <div class="text-base font-black text-rose-700">${avgO}</div>
+                  <div class="text-[10px] text-slate-400">${countO} correct</div>
+                </div>
               </div>
-              <p class="text-[10px] text-slate-500">Based on levels answered correctly (L2–L5).</p>
+              <p class="text-[10px] text-slate-500">Updates live when a student answers a question correctly (L2–L5).</p>
             </div>
 
             <div class="flex items-center justify-between pt-1 gap-1 flex-wrap">
@@ -2247,7 +2261,14 @@
         feedback.innerText = "Correct! Square claimed.";
 
         // Record the level answered correctly for average-level stats
-        const answeredLevel = Number(tttCurrentQuestion.level || tttCurrentLevel || 2);
+        const challengeLevel = currentSessionData?.currentChallenge?.level;
+        const answeredLevel = Number(
+          (tttCurrentQuestion && tttCurrentQuestion.level) ||
+          challengeLevel ||
+          tttCurrentLevel ||
+          2
+        );
+        console.log('[EduBank] Correct answer — recording level', answeredLevel, 'for player', myRole);
         setTimeout(async () => {
           await claimSquare(tttPendingCell, answeredLevel);
         }, 1000);
@@ -2278,49 +2299,75 @@
     }
 
     async function claimSquare(cellIdx, answeredLevel = null) {
-      const updatedBoard = [...tttBoard];
-      updatedBoard[cellIdx] = tttCurrentPlayer;
-
-      const newScores = { ...(currentSessionData.scores || { X: 0, O: 0 }) };
-      let nextTurn = tttCurrentPlayer === 'X' ? 'O' : 'X';
-
-      const isWinner = winningCombos.some(combo => {
-        const [a, b, c] = combo;
-        return updatedBoard[a] && updatedBoard[a] === updatedBoard[b] && updatedBoard[a] === updatedBoard[c];
-      });
-
-      if (isWinner) {
-        newScores[tttCurrentPlayer] = (newScores[tttCurrentPlayer] || 0) + 1;
-        showToast(`Player ${tttCurrentPlayer} (${myStudentName}) wins the round!`, 'success');
-      }
-
-      const payload = {
-        board: updatedBoard,
-        scores: newScores,
-        turn: nextTurn,
-        currentChallenge: null,
-        updatedAt: serverTimestamp()
-      };
-
-      // Update average-level stats when a question was answered correctly
-      if (answeredLevel != null) {
-        const stats = currentSessionData.levelStats || {
-          X: { totalLevel: 0, count: 0 },
-          O: { totalLevel: 0, count: 0 }
-        };
-        const side = tttCurrentPlayer;
-        const prev = stats[side] || { totalLevel: 0, count: 0 };
-        payload.levelStats = {
-          ...stats,
-          [side]: {
-            totalLevel: (prev.totalLevel || 0) + Number(answeredLevel),
-            count: (prev.count || 0) + 1
-          }
-        };
-      }
-
+      if (!currentSessionId) return;
+      const playerWhoClaimed = tttCurrentPlayer;
       const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
-      await updateDoc(sessionDocRef, payload);
+
+      try {
+        await runTransaction(db, async (transaction) => {
+          const snap = await transaction.get(sessionDocRef);
+          if (!snap.exists()) return;
+          const data = snap.data();
+
+          const updatedBoard = [...(data.board || Array(9).fill(null))];
+          if (updatedBoard[cellIdx]) return; // already claimed
+          updatedBoard[cellIdx] = playerWhoClaimed;
+
+          const newScores = { X: data.scores?.X || 0, O: data.scores?.O || 0 };
+          const nextTurn = playerWhoClaimed === 'X' ? 'O' : 'X';
+
+          const isWinner = winningCombos.some(combo => {
+            const [a, b, c] = combo;
+            return updatedBoard[a] && updatedBoard[a] === updatedBoard[b] && updatedBoard[a] === updatedBoard[c];
+          });
+
+          if (isWinner) {
+            newScores[playerWhoClaimed] = (newScores[playerWhoClaimed] || 0) + 1;
+          }
+
+          const payload = {
+            board: updatedBoard,
+            scores: newScores,
+            turn: nextTurn,
+            currentChallenge: null,
+            updatedAt: serverTimestamp()
+          };
+
+          // Always ensure levelStats exists; bump it when a question was answered correctly
+          const stats = data.levelStats || {
+            X: { totalLevel: 0, count: 0 },
+            O: { totalLevel: 0, count: 0 }
+          };
+          if (answeredLevel != null && !isNaN(Number(answeredLevel))) {
+            const side = playerWhoClaimed;
+            const prev = stats[side] || { totalLevel: 0, count: 0 };
+            payload.levelStats = {
+              X: side === 'X' ? {
+                totalLevel: (prev.totalLevel || 0) + Number(answeredLevel),
+                count: (prev.count || 0) + 1
+              } : (stats.X || { totalLevel: 0, count: 0 }),
+              O: side === 'O' ? {
+                totalLevel: (prev.totalLevel || 0) + Number(answeredLevel),
+                count: (prev.count || 0) + 1
+              } : (stats.O || { totalLevel: 0, count: 0 })
+            };
+          } else if (!data.levelStats) {
+            payload.levelStats = stats;
+          }
+
+          transaction.update(sessionDocRef, payload);
+
+          if (isWinner) {
+            // Toast outside transaction via microtask
+            setTimeout(() => {
+              showToast(`Player ${playerWhoClaimed} wins the round!`, 'success');
+            }, 0);
+          }
+        });
+      } catch (err) {
+        console.error('claimSquare failed:', err);
+        showToast('Failed to claim square: ' + (err.message || err), 'error');
+      }
     }
   </script>
 </body>
