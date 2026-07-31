@@ -751,6 +751,7 @@
     let unsubscribeSession = null;
     let myRole = null; // 'X' or 'O'
     let myStudentName = '';
+    let myPlayerToken = null; // unique per browser tab (survives refresh via sessionStorage)
 
     // Tic-Tac-Toe Game State
     let tttBoard = Array(9).fill(null);
@@ -1802,6 +1803,15 @@
     document.getElementById('closeJoinGameModalBtn').addEventListener('click', () => joinGameModal.classList.add('hidden'));
     document.getElementById('cancelJoinGameBtn').addEventListener('click', () => joinGameModal.classList.add('hidden'));
 
+    function getOrCreatePlayerToken() {
+      let token = sessionStorage.getItem('eduBank_playerToken');
+      if (!token) {
+        token = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        sessionStorage.setItem('eduBank_playerToken', token);
+      }
+      return token;
+    }
+
     document.getElementById('joinGameForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const inputCode = document.getElementById('joinCodeInput').value.trim().toUpperCase();
@@ -1810,6 +1820,7 @@
       if (!inputCode || !studentName) return;
 
       myStudentName = studentName;
+      myPlayerToken = getOrCreatePlayerToken();
 
       try {
         const user = await ensureAuth();
@@ -1833,7 +1844,7 @@
 
         const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', targetDoc.id);
 
-        // Atomic seat claim so two concurrent joins cannot both become Player X
+        // Atomic seat claim using a per-tab playerToken (works even when two tabs share the same anonymous UID)
         myRole = await runTransaction(db, async (transaction) => {
           const freshSnap = await transaction.get(sessionDocRef);
           if (!freshSnap.exists()) {
@@ -1841,17 +1852,19 @@
           }
           const data = freshSnap.data();
 
-          // Re-entry: same browser / same anonymous uid
-          if (data.playerX && data.playerX.uid === user.uid) {
+          // Re-entry only for THIS tab (unique sessionStorage token).
+          // Do NOT match on uid/name alone — two students can share a device
+          // or type the same name and must still get X then O.
+          if (data.playerX && data.playerX.token === myPlayerToken) {
             return 'X';
           }
-          if (data.playerO && data.playerO.uid === user.uid) {
+          if (data.playerO && data.playerO.token === myPlayerToken) {
             return 'O';
           }
 
           if (!data.playerX) {
             transaction.update(sessionDocRef, {
-              playerX: { uid: user.uid, name: studentName },
+              playerX: { uid: user.uid, name: studentName, token: myPlayerToken },
               status: data.playerO ? 'active' : 'waiting',
               updatedAt: serverTimestamp()
             });
@@ -1860,7 +1873,7 @@
 
           if (!data.playerO) {
             transaction.update(sessionDocRef, {
-              playerO: { uid: user.uid, name: studentName },
+              playerO: { uid: user.uid, name: studentName, token: myPlayerToken },
               status: 'active',
               updatedAt: serverTimestamp()
             });
