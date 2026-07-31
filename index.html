@@ -9,7 +9,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <script>
     tailwind.config = {
@@ -39,10 +39,9 @@
       color: #0f172a;
     }
     .modal-backdrop {
-      background-color: rgba(15, 23, 42, 0.5);
+      background-color: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(4px);
     }
-    /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -61,10 +60,10 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
 
-  <!-- Initial Loader to prevent sign-in form flash during auth restoration on refresh -->
+  <!-- Initial Loader -->
   <div id="initialLoader" class="fixed inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-    <p class="text-xs font-semibold text-slate-600">Restoring Session...</p>
+    <p class="text-xs font-semibold text-slate-600">Loading EduBank Studio...</p>
   </div>
 
   <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
@@ -74,18 +73,17 @@
       <div class="flex justify-between h-16 items-center">
         <div class="flex items-center space-x-3">
           <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md">
-            <i class="fa-solid me-0 fa-book-open text-xl"></i>
+            <i class="fa-solid fa-book-open text-xl"></i>
           </div>
           <div>
             <h1 class="font-bold text-lg text-slate-900 leading-tight">EduBank Studio</h1>
-            <p class="text-xs text-slate-500 font-medium">Teacher Question Bank Management</p>
+            <p class="text-xs text-slate-500 font-medium">Question Banks & Classroom Multiplayer</p>
           </div>
         </div>
 
-        <!-- Auth Status Controls -->
         <div id="authHeaderNav" class="hidden flex items-center space-x-4">
           <div class="text-right hidden sm:block">
-            <span class="block text-xs text-slate-400 font-medium">Logged in as</span>
+            <span class="block text-xs text-slate-400 font-medium">Teacher Logged In</span>
             <span id="userEmailDisplay" class="text-sm font-semibold text-slate-700">teacher@school.edu</span>
           </div>
           <button id="logoutBtn" class="inline-flex items-center space-x-2 px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition shadow-sm">
@@ -93,24 +91,30 @@
             <span>Sign Out</span>
           </button>
         </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="openJoinModalBtn" class="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold shadow-md transition transform hover:scale-105">
+            <i class="fa-solid fa-gamepad text-sm"></i>
+            <span>Join Student Game</span>
+          </button>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
+    <!-- Auth Section -->
     <section id="authSection" class="max-w-md mx-auto my-12 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
       <div class="bg-gradient-to-r from-brand-600 to-blue-700 p-6 text-white text-center">
         <div class="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
           <i class="fa-solid fa-graduation-cap text-2xl text-white"></i>
         </div>
         <h2 class="text-2xl font-bold">Teacher Portal</h2>
-        <p class="text-blue-100 text-sm mt-1">Sign in or create an account to manage question banks</p>
+        <p class="text-blue-100 text-sm mt-1">Manage question banks and host student game rooms</p>
       </div>
 
       <div class="p-6 sm:p-8">
-        <!-- Auth Tabs -->
         <div class="flex border-b border-slate-200 mb-6">
           <button id="tabLoginBtn" class="flex-1 py-2.5 font-semibold text-sm border-b-2 border-brand-600 text-brand-600">
             Sign In
@@ -120,10 +124,8 @@
           </button>
         </div>
 
-        <!-- Auth Alert Box -->
         <div id="authAlert" class="hidden mb-4 p-3 rounded-lg text-xs font-medium border"></div>
 
-        <!-- Sign In Form -->
         <form id="loginForm" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
@@ -149,7 +151,6 @@
           </button>
         </form>
 
-        <!-- Register Form -->
         <form id="registerForm" class="hidden space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
@@ -186,11 +187,12 @@
       </div>
     </section>
 
+    <!-- Collections Section -->
     <section id="collectionsSection" class="hidden space-y-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h2 class="text-xl font-bold text-slate-900">Question Collections</h2>
-          <p class="text-sm text-slate-500">Organize your question banks by subject, grade, or assessment topic.</p>
+          <p class="text-sm text-slate-500">Organize question banks and host game sessions for student pairs.</p>
         </div>
         <div class="flex items-center space-x-3">
           <div class="relative flex-1 sm:w-64">
@@ -206,26 +208,22 @@
         </div>
       </div>
 
-      <!-- Collections Grid -->
-      <div id="collectionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <!-- Collection Cards injected dynamically -->
-      </div>
+      <div id="collectionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
-      <!-- Empty Collections State -->
       <div id="noCollectionsState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
         <div class="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600">
           <i class="fa-solid fa-folder-open text-2xl"></i>
         </div>
         <h3 class="text-base font-bold text-slate-800">No Question Collections Found</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Get started by creating your first collection to start adding multiple choice questions.</p>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Create a collection to start adding questions and hosting student pair games.</p>
         <button id="emptyStateAddColBtn" class="mt-4 bg-brand-600 text-white font-semibold px-4 py-2 rounded-lg text-xs hover:bg-brand-700 transition">
           + Create Collection
         </button>
       </div>
     </section>
 
+    <!-- Questions Detail Section -->
     <section id="questionsSection" class="hidden space-y-6">
-      <!-- Top Navigation & Collection Info Header -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <button id="backToCollectionsBtn" class="inline-flex items-center space-x-2 text-slate-600 hover:text-brand-600 text-xs font-semibold transition bg-slate-100 px-3 py-1.5 rounded-lg">
@@ -233,10 +231,10 @@
             <span>Back to Collections</span>
           </button>
           
-          <div class="flex items-center space-x-2">
-            <button id="startTicTacToeBtn" class="inline-flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-2 rounded-xl text-xs transition shadow-md">
-              <i class="fa-solid fa-gamepad"></i>
-              <span>Host Tic-Tac-Toe</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="openTeacherManagerBtn" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition shadow-md">
+              <i class="fa-solid fa-tower-broadcast"></i>
+              <span>Host Student Pair Sessions</span>
             </button>
             <button id="openImportCsvBtn" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold px-3 py-2 rounded-xl text-xs transition">
               <i class="fa-solid fa-file-csv"></i>
@@ -256,13 +254,12 @@
         <div class="pt-2 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div class="flex items-center space-x-3">
-              <h2 id="currentCollectionTitle" class="text-2xl font-bold text-slate-900">Math 101</h2>
+              <h2 id="currentCollectionTitle" class="text-2xl font-bold text-slate-900">Collection Title</h2>
               <span id="questionCountBadge" class="bg-brand-100 text-brand-700 text-xs font-bold px-2.5 py-0.5 rounded-full">0 Questions</span>
             </div>
-            <p id="currentCollectionDesc" class="text-xs text-slate-500 mt-1">Collection description goes here...</p>
+            <p id="currentCollectionDesc" class="text-xs text-slate-500 mt-1">Collection description...</p>
           </div>
 
-          <!-- Level Badges Breakdown -->
           <div class="flex flex-wrap items-center gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-100">
             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Levels:</span>
             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-800">L2: <span id="countL2" class="ml-1">0</span></span>
@@ -273,7 +270,6 @@
         </div>
       </div>
 
-      <!-- Search & Level Filter Bar -->
       <div class="flex flex-col sm:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-slate-200">
         <div class="relative flex-1 w-full">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -293,27 +289,22 @@
         </div>
       </div>
 
-      <!-- Questions List -->
-      <div id="questionsContainer" class="space-y-4">
-        <!-- Dynamic Question Cards -->
-      </div>
+      <div id="questionsContainer" class="space-y-4"></div>
 
-      <!-- Empty Questions State -->
       <div id="noQuestionsState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
         <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
           <i class="fa-solid fa-clipboard-question text-2xl"></i>
         </div>
         <h3 class="text-base font-bold text-slate-800">No Questions Found</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Create questions manually or use CSV import to quickly populate this collection.</p>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Create questions manually or import a CSV file to host games.</p>
       </div>
     </section>
 
   </main>
 
-  
-  <!-- Collection Add/Edit Modal -->
+  <!-- Collection Modal -->
   <div id="collectionModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fadeIn">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
       <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
         <h3 id="collectionModalTitle" class="text-lg font-bold text-slate-900">Create New Collection</h3>
         <button id="closeCollectionModalBtn" class="text-slate-400 hover:text-slate-600 transition">
@@ -332,17 +323,17 @@
         </div>
         <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
           <button type="button" id="cancelCollectionBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
-          <button type="submit" id="saveCollectionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Collection</button>
+          <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Collection</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Question Add/Edit Modal -->
+  <!-- Question Modal -->
   <div id="questionModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden overflow-y-auto">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 my-8">
       <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-        <h3 id="questionModalTitle" class="text-lg font-bold text-slate-900">Add Multiple Choice Question</h3>
+        <h3 id="questionModalTitle" class="text-lg font-bold text-slate-900">Add Question</h3>
         <button id="closeQuestionModalBtn" class="text-slate-400 hover:text-slate-600 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
@@ -357,7 +348,7 @@
           </div>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div class="md:col-span-3">
-              <textarea id="qTextInput" required rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Enter the main question text..."></textarea>
+              <textarea id="qTextInput" required rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Enter question prompt..."></textarea>
             </div>
             <div class="md:col-span-1">
               <select id="qLevelInput" required class="w-full bg-slate-50 border border-slate-300 rounded-lg text-sm p-2.5 font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500">
@@ -372,44 +363,36 @@
 
         <div class="space-y-3 pt-2">
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Answer Options & Correct Key</label>
-          
-          <!-- Option A -->
           <div class="flex items-center space-x-2">
-            <input type="radio" name="correctOpt" value="0" id="optRadio0" checked class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <input type="radio" name="correctOpt" value="0" id="optRadio0" checked class="w-4 h-4 text-brand-600">
             <span class="w-6 text-center font-bold text-slate-500 text-xs">A</span>
-            <input type="text" id="optInput0" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option A text">
+            <input type="text" id="optInput0" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option A">
           </div>
-
-          <!-- Option B -->
           <div class="flex items-center space-x-2">
-            <input type="radio" name="correctOpt" value="1" id="optRadio1" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <input type="radio" name="correctOpt" value="1" id="optRadio1" class="w-4 h-4 text-brand-600">
             <span class="w-6 text-center font-bold text-slate-500 text-xs">B</span>
-            <input type="text" id="optInput1" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option B text">
+            <input type="text" id="optInput1" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option B">
           </div>
-
-          <!-- Option C -->
           <div class="flex items-center space-x-2">
-            <input type="radio" name="correctOpt" value="2" id="optRadio2" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <input type="radio" name="correctOpt" value="2" id="optRadio2" class="w-4 h-4 text-brand-600">
             <span class="w-6 text-center font-bold text-slate-500 text-xs">C</span>
-            <input type="text" id="optInput2" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option C text">
+            <input type="text" id="optInput2" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option C">
           </div>
-
-          <!-- Option D -->
           <div class="flex items-center space-x-2">
-            <input type="radio" name="correctOpt" value="3" id="optRadio3" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+            <input type="radio" name="correctOpt" value="3" id="optRadio3" class="w-4 h-4 text-brand-600">
             <span class="w-6 text-center font-bold text-slate-500 text-xs">D</span>
-            <input type="text" id="optInput3" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option D text">
+            <input type="text" id="optInput3" required class="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Option D">
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Explanation / Solution Notes (Optional)</label>
-          <textarea id="qExplanationInput" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Provide feedback or rationales for students/teachers..."></textarea>
+          <textarea id="qExplanationInput" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Provide solution rationale..."></textarea>
         </div>
 
         <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
           <button type="button" id="cancelQuestionBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
-          <button type="submit" id="saveQuestionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Question</button>
+          <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">Save Question</button>
         </div>
       </form>
     </div>
@@ -420,8 +403,8 @@
     <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 my-auto flex flex-col max-h-[90vh]">
       <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
         <div>
-          <h3 class="text-lg font-bold text-slate-900">Batch Import Questions via CSV</h3>
-          <p class="text-xs text-slate-500">Upload multiple choice questions directly into this collection.</p>
+          <h3 class="text-lg font-bold text-slate-900">Batch Import CSV Questions</h3>
+          <p class="text-xs text-slate-500">Upload questions into this collection.</p>
         </div>
         <button id="closeCsvModalBtn" class="text-slate-400 hover:text-slate-600 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -429,37 +412,29 @@
       </div>
 
       <div class="space-y-4 overflow-y-auto flex-1 pr-1">
-        <!-- Guidelines & Download Sample -->
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-slate-800">CSV Column Structure Required:</span>
+            <span class="font-bold text-slate-800">CSV Column Structure:</span>
             <button id="downloadSampleCsvBtn" class="text-brand-600 hover:underline font-semibold flex items-center space-x-1">
               <i class="fa-solid fa-download"></i>
-              <span>Download Template CSV</span>
+              <span>Download Template</span>
             </button>
           </div>
           <p class="font-mono bg-white p-2 rounded border border-slate-200 text-[11px] text-slate-700 overflow-x-auto">
             Question, Option A, Option B, Option C, Option D, Correct Answer, Level, Explanation
           </p>
-          <ul class="list-disc pl-4 space-y-0.5 text-[11px] text-slate-500">
-            <li><strong>Correct Answer:</strong> Use <strong>A, B, C, D</strong> or <strong>1, 2, 3, 4</strong>.</li>
-            <li><strong>Level:</strong> Accepts integer values <strong>2, 3, 4, or 5</strong> (defaults to 2 if missing or invalid).</li>
-          </ul>
         </div>
 
-        <!-- File Upload Area -->
         <div class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50 hover:bg-blue-50/30" id="dropZone">
           <input type="file" id="csvFileInput" accept=".csv" class="hidden">
           <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
           <p class="text-xs font-bold text-slate-700">Click to upload CSV or drag and drop</p>
-          <p class="text-[11px] text-slate-400 mt-0.5">CSV files up to 5MB</p>
         </div>
 
-        <!-- Preview Table -->
         <div id="csvPreviewContainer" class="hidden space-y-2">
           <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-slate-700">Preview Parsed Questions (<span id="parsedCount">0</span>)</span>
-            <span id="validBadge" class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Ready to Import</span>
+            <span class="text-xs font-bold text-slate-700">Parsed Questions (<span id="parsedCount">0</span>)</span>
+            <span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Ready</span>
           </div>
           <div class="max-h-52 overflow-y-auto border border-slate-200 rounded-xl">
             <table class="w-full text-left text-xs">
@@ -471,9 +446,7 @@
                   <th class="p-2">Level</th>
                 </tr>
               </thead>
-              <tbody id="csvPreviewTableBody" class="divide-y divide-slate-100">
-                <!-- Preview Rows -->
-              </tbody>
+              <tbody id="csvPreviewTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
@@ -506,39 +479,147 @@
     </div>
   </div>
 
-  <!-- Tic-Tac-Toe Game Modal -->
+  <!-- TEACHER SESSION MANAGEMENT DASHBOARD MODAL -->
+  <div id="teacherManagerModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-tower-broadcast text-indigo-600"></i> Host Student Pair Game Sessions
+          </h3>
+          <p class="text-xs text-slate-500">Generate game room codes for student pairs to play against each other.</p>
+        </div>
+        <button id="closeTeacherManagerModalBtn" class="text-slate-400 hover:text-slate-600 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Controls to generate room codes -->
+      <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span class="block text-xs font-bold text-indigo-900">Generate Student Room Codes</span>
+          <span class="text-[11px] text-indigo-700">Each code supports exactly 1 pair of students (Player X vs Player O).</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="createSingleRoomBtn" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>+1 Room Code</span>
+          </button>
+          <button id="createBatch5RoomsBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>+5 Room Codes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Sessions Grid / Table -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-3">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Classroom Game Rooms (<span id="teacherRoomCount">0</span>)</h4>
+          <button id="deleteAllTeacherRoomsBtn" class="text-rose-600 hover:text-rose-800 text-xs font-bold transition">Clear All Rooms</button>
+        </div>
+
+        <div id="teacherRoomsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Room cards populated dynamically -->
+        </div>
+
+        <div id="noTeacherRoomsState" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+          <i class="fa-solid fa-gamepad text-3xl text-slate-300 mb-2"></i>
+          <p class="text-xs font-bold text-slate-600">No Active Rooms Created Yet</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Click "+1 Room Code" above to create codes for your student pairs.</p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 mt-4 flex justify-end">
+        <button id="exitTeacherManagerBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT JOIN GAME MODAL -->
+  <div id="joinGameModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-gamepad text-indigo-600"></i> Join Student Game
+          </h3>
+          <p class="text-xs text-slate-500">Enter the 6-character game code provided by your teacher.</p>
+        </div>
+        <button id="closeJoinGameModalBtn" class="text-slate-400 hover:text-slate-600 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form id="joinGameForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Game Code (6 Characters)</label>
+          <input type="text" id="joinCodeInput" required maxlength="6" class="w-full px-3 py-2.5 uppercase tracking-widest text-center font-mono font-bold text-xl bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. A8X9P2">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Your Name</label>
+          <input type="text" id="joinPlayerNameInput" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Alex Smith">
+        </div>
+        <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" id="cancelJoinGameBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">Cancel</button>
+          <button type="submit" id="submitJoinGameBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition shadow-md flex items-center space-x-1.5">
+            <span>Join Game Room</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TIC-TAC-TOE STUDENT GAME PLAY MODAL -->
   <div id="ticTacToeModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden overflow-y-auto">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
-      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+      <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
         <div>
           <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
             <i class="fa-solid fa-gamepad text-indigo-600"></i> Tic-Tac-Toe Challenge
           </h3>
-          <p class="text-xs text-slate-500">Answer questions correctly to claim squares!</p>
+          <p class="text-xs text-slate-500" id="tttCollectionSubtitle font-medium">Answer questions correctly to claim squares!</p>
         </div>
         <button id="closeTicTacToeModalBtn" class="text-slate-400 hover:text-slate-600 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
+      <!-- Room Code Banner & Student Role Badge -->
+      <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-3 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-indigo-600 tracking-wider block">Game Room Code</span>
+          <span id="displayRoomCode" class="text-lg font-black text-indigo-900 font-mono tracking-widest">XXXXXX</span>
+        </div>
+        <div id="myRoleBadge" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow-sm">
+          Assigned: Player X
+        </div>
+      </div>
+
+      <!-- Waiting For Opponent Alert -->
+      <div id="waitingForPlayerBanner" class="hidden bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold p-2.5 rounded-xl mb-3 text-center animate-pulse flex items-center justify-center gap-2">
+        <i class="fa-solid fa-spinner fa-spin text-amber-600"></i>
+        <span>Waiting for Student 2 to join with code...</span>
+      </div>
+
       <!-- Scoreboard & Turn Status -->
       <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl mb-3 border border-slate-200">
-        <div id="playerXCard" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-indigo-300 bg-indigo-50">
+        <div id="playerXCard" class="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-indigo-300 bg-indigo-50">
           <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">X</span>
           <div>
-            <span class="text-xs font-bold text-slate-800 block">Player X</span>
+            <span id="playerXName" class="text-xs font-bold text-slate-800 block truncate max-w-[80px]">Student 1</span>
             <span id="scoreX" class="text-[11px] text-slate-500 font-semibold">Wins: 0</span>
           </div>
         </div>
 
-        <div id="turnBadge" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-sm">
-          Player X's Turn
+        <div id="turnBadge" class="px-2.5 py-1 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-sm text-center">
+          Waiting...
         </div>
 
-        <div id="playerOCard" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-transparent">
+        <div id="playerOCard" class="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-transparent">
           <span class="w-6 h-6 rounded-full bg-rose-500 text-white font-bold text-xs flex items-center justify-center">O</span>
           <div>
-            <span class="text-xs font-bold text-slate-800 block">Player O</span>
+            <span id="playerOName" class="text-xs font-bold text-slate-800 block truncate max-w-[80px]">Waiting...</span>
             <span id="scoreO" class="text-[11px] text-slate-500 font-semibold">Wins: 0</span>
           </div>
         </div>
@@ -547,27 +628,24 @@
       <!-- Question Trigger Settings Bar -->
       <div class="flex items-center justify-between mb-4 px-1 bg-slate-50/80 p-2 rounded-xl border border-slate-200">
         <label class="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-          <i class="fa-solid fa-bolt text-amber-500"></i> Trigger Question On:
+          <i class="fa-solid fa-bolt text-amber-500"></i> Question Trigger:
         </label>
-        <select id="tttQuestionMode" class="text-xs font-semibold bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
+        <select id="tttQuestionMode" class="text-xs font-semibold bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
           <option value="winOnly" selected>🏆 Win Opportunity Only</option>
           <option value="allMoves">📝 Every Move</option>
         </select>
       </div>
 
       <!-- Tic-Tac-Toe Grid -->
-      <div id="tttGrid" class="grid grid-cols-3 gap-2.5 max-w-xs mx-auto aspect-square mb-4">
-        <!-- 9 Grid Buttons generated by JS -->
-      </div>
+      <div id="tttGrid" class="grid grid-cols-3 gap-2.5 max-w-xs mx-auto aspect-square mb-4"></div>
 
-      <!-- Controls -->
       <div class="flex justify-between items-center pt-3 border-t border-slate-100">
         <button id="resetTttBtn" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition flex items-center space-x-1">
           <i class="fa-solid fa-rotate-right"></i>
           <span>Reset Board</span>
         </button>
         <button id="exitTttBtn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold transition">
-          Exit Game
+          Exit Room
         </button>
       </div>
 
@@ -576,17 +654,16 @@
         <div>
           <div class="flex justify-between items-center mb-2">
             <span id="challengePlayerBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800">
-              Player X's Challenge
+              Player's Challenge
             </span>
             <span id="challengeLevelBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
               Level 5
             </span>
           </div>
 
-          <!-- Banner for Opportunity to Win -->
           <div id="winOpportunityBanner" class="hidden mb-2 p-1.5 bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold rounded-lg text-center flex items-center justify-center gap-1.5 animate-pulse">
             <i class="fa-solid fa-trophy text-amber-500"></i>
-            <span>MATCH POINT! Answer correctly to win the game!</span>
+            <span>MATCH POINT! Answer correctly to claim square & win!</span>
           </div>
 
           <p id="challengePromptMsg" class="text-[11px] font-semibold text-slate-500 mb-2">
@@ -597,9 +674,7 @@
             Question text...
           </div>
 
-          <div id="challengeOptionsContainer" class="space-y-2">
-            <!-- Dynamic Option Buttons -->
-          </div>
+          <div id="challengeOptionsContainer" class="space-y-2"></div>
         </div>
 
         <div id="challengeFeedback" class="hidden p-2 rounded-lg text-xs font-semibold text-center mt-2"></div>
@@ -614,6 +689,7 @@
       getAuth, 
       createUserWithEmailAndPassword, 
       signInWithEmailAndPassword, 
+      signInAnonymously,
       signOut, 
       onAuthStateChanged,
       setPersistence,
@@ -646,36 +722,42 @@
       measurementId: "G-HC5LZHK7PP"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Enforce local session persistence across browser reloads and iframe embeds
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
     setPersistence(auth, browserLocalPersistence).catch((err) => {
       console.warn("Auth persistence notice:", err);
     });
 
-    // Global State
+    // Global App State
     let currentUser = null;
     let collectionsList = [];
     let currentCollectionId = null;
     let questionsList = [];
     let unsubscribeCollections = null;
     let unsubscribeQuestions = null;
+    let unsubscribeTeacherRooms = null;
     let pendingConfirmAction = null;
     let parsedCsvQuestions = [];
     let isAutoLoggingIn = false;
 
+    // Student Game Room State
+    let currentSessionId = null;
+    let currentSessionData = null;
+    let unsubscribeSession = null;
+    let myRole = null; // 'X' or 'O'
+    let myStudentName = '';
+
     // Tic-Tac-Toe Game State
     let tttBoard = Array(9).fill(null);
     let tttCurrentPlayer = 'X';
-    let tttScores = { X: 0, O: 0 };
     let tttPendingCell = null;
     let tttCurrentLevel = 5;
     let tttCurrentQuestion = null;
 
-    // Helper to check if a hypothetical move completes a 3-in-a-row win
     function wouldWin(board, cellIdx, player) {
       const tempBoard = [...board];
       tempBoard[cellIdx] = player;
@@ -685,7 +767,13 @@
       });
     }
 
-    // Toast Notification System
+    async function ensureAuth() {
+      if (!auth.currentUser) {
+        await signInAnonymously(auth);
+      }
+      return auth.currentUser;
+    }
+
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       if (!container) return;
@@ -722,13 +810,8 @@
       };
 
       container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('opacity-0', 'translate-y-2'));
 
-      // Trigger enter animation
-      requestAnimationFrame(() => {
-        toast.classList.remove('opacity-0', 'translate-y-2');
-      });
-
-      // Auto dismiss after 3.5 seconds
       setTimeout(() => {
         if (toast.parentNode) {
           toast.classList.add('opacity-0', 'translate-y-2');
@@ -737,7 +820,6 @@
       }, 3500);
     }
 
-    // Confirmation Modal System
     function showConfirmModal(title, text, onConfirm) {
       document.getElementById('confirmModalTitle').innerText = title;
       document.getElementById('confirmModalText').innerText = text;
@@ -756,7 +838,7 @@
       pendingConfirmAction = null;
     });
 
-    // Auth State Observer
+    // Auth Observer
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       const authSection = document.getElementById('authSection');
@@ -765,24 +847,20 @@
       const authHeaderNav = document.getElementById('authHeaderNav');
       const initialLoader = document.getElementById('initialLoader');
 
-      if (user) {
+      if (user && !user.isAnonymous) {
         document.getElementById('userEmailDisplay').innerText = user.email;
         authSection.classList.add('hidden');
         authHeaderNav.classList.remove('hidden');
         
-        // Load collections if not currently viewing a specific collection
         if (!currentCollectionId) {
           listenToCollections();
         }
 
         if (initialLoader) {
           initialLoader.classList.add('opacity-0');
-          setTimeout(() => {
-            if (initialLoader && initialLoader.parentNode) initialLoader.remove();
-          }, 300);
+          setTimeout(() => { if (initialLoader && initialLoader.parentNode) initialLoader.remove(); }, 300);
         }
       } else {
-        // Attempt automatic session restoration if IndexedDB persistence is restricted in iframe
         const savedSession = localStorage.getItem('eduBank_session');
         if (savedSession && !isAutoLoggingIn) {
           try {
@@ -793,14 +871,12 @@
               return;
             }
           } catch (e) {
-            console.warn("Auto session restore failed:", e);
             localStorage.removeItem('eduBank_session');
           } finally {
             isAutoLoggingIn = false;
           }
         }
 
-        // Logged Out
         if (unsubscribeCollections) unsubscribeCollections();
         if (unsubscribeQuestions) unsubscribeQuestions();
         
@@ -812,14 +888,12 @@
 
         if (initialLoader) {
           initialLoader.classList.add('opacity-0');
-          setTimeout(() => {
-            if (initialLoader && initialLoader.parentNode) initialLoader.remove();
-          }, 300);
+          setTimeout(() => { if (initialLoader && initialLoader.parentNode) initialLoader.remove(); }, 300);
         }
       }
     });
 
-    // Auth Tab Switchers
+    // Auth Controls
     const tabLoginBtn = document.getElementById('tabLoginBtn');
     const tabRegisterBtn = document.getElementById('tabRegisterBtn');
     const loginForm = document.getElementById('loginForm');
@@ -847,7 +921,6 @@
       authAlert.innerText = msg;
     }
 
-    // Login Form Handler
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
@@ -856,13 +929,12 @@
       try {
         await signInWithEmailAndPassword(auth, email, password);
         localStorage.setItem('eduBank_session', JSON.stringify({ email, password }));
-        showToast('Successfully signed in!', 'success');
+        showToast('Signed in successfully!', 'success');
       } catch (err) {
-        showAuthError(err.message || 'Failed to sign in. Please check credentials.');
+        showAuthError(err.message || 'Failed to sign in.');
       }
     });
 
-    // Register Form Handler
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('regEmail').value.trim();
@@ -877,21 +949,20 @@
       try {
         await createUserWithEmailAndPassword(auth, email, password);
         localStorage.setItem('eduBank_session', JSON.stringify({ email, password }));
-        showToast('Account created successfully!', 'success');
+        showToast('Account created!', 'success');
       } catch (err) {
         showAuthError(err.message || 'Registration failed.');
       }
     });
 
-    // Logout Handler
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       localStorage.removeItem('eduBank_session');
       await signOut(auth);
-      showToast('Signed out successfully.', 'info');
+      showToast('Signed out.', 'info');
     });
 
     function listenToCollections() {
-      if (!currentUser) return;
+      if (!currentUser || currentUser.isAnonymous) return;
 
       const collectionsRef = collection(db, 'teachers', currentUser.uid, 'collections');
       
@@ -901,9 +972,7 @@
           collectionsList.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // Sort by creation date descending
         collectionsList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
         renderCollections();
       }, (error) => {
         showToast('Error loading collections: ' + error.message, 'error');
@@ -957,7 +1026,7 @@
             </div>
             
             <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-              <span class="text-[11px] text-slate-400 font-medium">Multiple Choice Questions</span>
+              <span class="text-[11px] text-slate-400 font-medium">Question Bank</span>
               <button class="open-col-btn bg-slate-100 hover:bg-brand-600 hover:text-white text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs transition" data-id="${col.id}">
                 Open Collection <i class="fa-solid fa-arrow-right ml-1"></i>
               </button>
@@ -966,7 +1035,6 @@
           collectionsGrid.appendChild(card);
         });
 
-        // Event listeners on cards
         document.querySelectorAll('.open-col-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
             const id = e.currentTarget.dataset.id;
@@ -995,7 +1063,6 @@
 
     document.getElementById('collectionSearchInput').addEventListener('input', renderCollections);
 
-    // Collection Modals & Actions
     const collectionModal = document.getElementById('collectionModal');
     const collectionForm = document.getElementById('collectionForm');
 
@@ -1014,7 +1081,7 @@
 
     collectionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser) return;
+      if (!currentUser || currentUser.isAnonymous) return;
 
       const colId = document.getElementById('colIdInput').value;
       const title = document.getElementById('colTitleInput').value.trim();
@@ -1022,12 +1089,10 @@
 
       try {
         if (colId) {
-          // Update
           const colRef = doc(db, 'teachers', currentUser.uid, 'collections', colId);
           await updateDoc(colRef, { title, description, updatedAt: serverTimestamp() });
           showToast('Collection updated.', 'success');
         } else {
-          // Add
           const colRef = collection(db, 'teachers', currentUser.uid, 'collections');
           await addDoc(colRef, { title, description, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
           showToast('Collection created.', 'success');
@@ -1039,7 +1104,7 @@
     });
 
     async function deleteCollection(colId) {
-      if (!currentUser) return;
+      if (!currentUser || currentUser.isAnonymous) return;
       try {
         const colRef = doc(db, 'teachers', currentUser.uid, 'collections', colId);
         await deleteDoc(colRef);
@@ -1049,11 +1114,9 @@
       }
     }
 
-
     function openCollectionDetail(colId) {
       currentCollectionId = colId;
       const col = collectionsList.find(c => c.id === colId);
-
       if (!col) return;
 
       document.getElementById('currentCollectionTitle').innerText = col.title;
@@ -1085,9 +1148,7 @@
           questionsList.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // Sort by level ascending, then createdAt
         questionsList.sort((a, b) => (a.level || 2) - (b.level || 2));
-
         renderQuestions();
       }, (error) => {
         showToast('Error loading questions: ' + error.message, 'error');
@@ -1100,7 +1161,6 @@
       const searchVal = document.getElementById('questionSearchInput').value.toLowerCase();
       const levelFilter = document.getElementById('levelFilterSelect').value;
 
-      // Calculate Stats
       const countL2 = questionsList.filter(q => Number(q.level) === 2).length;
       const countL3 = questionsList.filter(q => Number(q.level) === 3).length;
       const countL4 = questionsList.filter(q => Number(q.level) === 4).length;
@@ -1204,7 +1264,6 @@
           container.appendChild(card);
         });
 
-        // Add event listeners for Edit / Delete
         document.querySelectorAll('.edit-q-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
             const id = e.currentTarget.dataset.id;
@@ -1227,7 +1286,6 @@
     document.getElementById('questionSearchInput').addEventListener('input', renderQuestions);
     document.getElementById('levelFilterSelect').addEventListener('change', renderQuestions);
 
-    // Question Modal & Form Actions
     const questionModal = document.getElementById('questionModal');
     const questionForm = document.getElementById('questionForm');
 
@@ -1257,7 +1315,7 @@
 
     questionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser || !currentCollectionId) return;
+      if (!currentUser || currentUser.isAnonymous || !currentCollectionId) return;
 
       const qId = document.getElementById('qIdInput').value;
       const questionText = document.getElementById('qTextInput').value.trim();
@@ -1290,7 +1348,7 @@
     });
 
     async function deleteQuestion(qId) {
-      if (!currentUser || !currentCollectionId) return;
+      if (!currentUser || currentUser.isAnonymous || !currentCollectionId) return;
       try {
         const qRef = doc(db, 'teachers', currentUser.uid, 'collections', currentCollectionId, 'questions', qId);
         await deleteDoc(qRef);
@@ -1300,7 +1358,7 @@
       }
     }
 
-
+    // CSV Handling
     const csvImportModal = document.getElementById('csvImportModal');
     const dropZone = document.getElementById('dropZone');
     const csvFileInput = document.getElementById('csvFileInput');
@@ -1345,42 +1403,34 @@
 
     function handleCsvFile(file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target.result;
-        parseCSVText(text);
-      };
+      reader.onload = (e) => parseCSVText(e.target.result);
       reader.readAsText(file);
     }
 
     function parseCSVText(csvText) {
       const lines = csvText.split(/\r\n|\n/);
       if (lines.length < 2) {
-        showToast('CSV file is empty or missing headers.', 'warning');
+        showToast('CSV file is empty.', 'warning');
         return;
       }
 
       parsedCsvQuestions = [];
-      // CSV Line parser that handles quotes
       const parseRow = (line) => {
         const result = [];
         let cur = '';
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
           const char = line[i];
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
+          if (char === '"') inQuotes = !inQuotes;
+          else if (char === ',' && !inQuotes) {
             result.push(cur.trim().replace(/^"|"$/g, ''));
             cur = '';
-          } else {
-            cur += char;
-          }
+          } else cur += char;
         }
         result.push(cur.trim().replace(/^"|"$/g, ''));
         return result;
       };
 
-      // Skip header row
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
         const row = parseRow(lines[i]);
@@ -1399,9 +1449,7 @@
           else if (rawKey === 'D' || rawKey === '4') keyIndex = 3;
 
           let rawLevel = parseInt(row[6], 10);
-          if (isNaN(rawLevel) || rawLevel < 2 || rawLevel > 5) {
-            rawLevel = 2; // Default to Level 2
-          }
+          if (isNaN(rawLevel) || rawLevel < 2 || rawLevel > 5) rawLevel = 2;
 
           const explanation = row[7] || '';
 
@@ -1447,16 +1495,14 @@
       } else {
         previewContainer.classList.add('hidden');
         confirmImportCsvBtn.disabled = true;
-        showToast('No valid questions found in CSV.', 'warning');
       }
     }
 
-    // Batch Import into Firestore
     confirmImportCsvBtn.addEventListener('click', async () => {
-      if (!currentUser || !currentCollectionId || parsedCsvQuestions.length === 0) return;
+      if (!currentUser || currentUser.isAnonymous || !currentCollectionId || parsedCsvQuestions.length === 0) return;
 
       confirmImportCsvBtn.disabled = true;
-      confirmImportCsvBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+      confirmImportCsvBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing...';
 
       try {
         const batch = writeBatch(db);
@@ -1464,36 +1510,30 @@
 
         parsedCsvQuestions.forEach((q) => {
           const newDocRef = doc(questionsRef);
-          batch.set(newDocRef, {
-            ...q,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
+          batch.set(newDocRef, { ...q, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         });
 
         await batch.commit();
-        showToast(`Successfully imported ${parsedCsvQuestions.length} questions!`, 'success');
+        showToast(`Imported ${parsedCsvQuestions.length} questions!`, 'success');
         csvImportModal.classList.add('hidden');
       } catch (err) {
-        showToast('Batch import failed: ' + err.message, 'error');
+        showToast('Import failed: ' + err.message, 'error');
       } finally {
         confirmImportCsvBtn.disabled = false;
         confirmImportCsvBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> <span>Import Questions</span>';
       }
     });
 
-    // Sample CSV Generator
     document.getElementById('downloadSampleCsvBtn').addEventListener('click', () => {
       const sampleContent = `Question,Option A,Option B,Option C,Option D,Correct Answer,Level,Explanation
-"What is the derivative of x^2 with respect to x?","x","2x","2","x^2",B,2,"Use the power rule: d/dx(x^n) = n*x^(n-1)"
-"Which process describes cellular energy production in mitochondria?","Glycolysis","Krebs Cycle","Oxidative Phosphorylation","Photosynthesis",C,3,"Oxidative phosphorylation produces the bulk of ATP in mitochondria."
-"Analyze the effect of fiscal policy expansion on interest rates.","Rates decrease","Rates increase","No impact","Inflation drops instantly",B,4,"Expansionary fiscal policy increases demand for loanable funds."
-"Evaluate the reliability of a randomized double-blind control trial.","High validity","Low validity","No control","Unethical",A,5,"Double-blind RCTs minimize observer and participant bias."`;
+"What is the derivative of x^2 with respect to x?","x","2x","2","x^2",B,2,"Power rule: d/dx(x^n) = n*x^(n-1)"
+"Which process produces energy in mitochondria?","Glycolysis","Krebs Cycle","Oxidative Phosphorylation","Photosynthesis",C,3,"Oxidative phosphorylation produces ATP."
+"Analyze fiscal expansion effects on interest rates.","Rates drop","Rates rise","No impact","Inflation drops",B,4,"Expansion increases demand for loans."
+"Evaluate validity of double-blind randomized trial.","High validity","Low validity","No control","Unethical",A,5,"Double-blind RCTs minimize bias."`;
 
       downloadBlob(sampleContent, 'question_bank_template.csv', 'text/csv');
     });
 
-    // Export Questions to CSV
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
       if (questionsList.length === 0) {
         showToast('No questions to export.', 'warning');
@@ -1516,7 +1556,7 @@
 
       const colTitle = document.getElementById('currentCollectionTitle').innerText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       downloadBlob(csvContent, `${colTitle}_questions.csv`, 'text/csv');
-      showToast('Questions exported to CSV!', 'success');
+      showToast('Exported CSV!', 'success');
     });
 
     function downloadBlob(content, filename, contentType) {
@@ -1533,70 +1573,413 @@
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     // =========================================================
-    // TIC-TAC-TOE QUESTION GAME LOGIC
+    // TEACHER MULTI-SESSION HOSTING & MONITORING
     // =========================================================
-    const ticTacToeModal = document.getElementById('ticTacToeModal');
-    const tttGrid = document.getElementById('tttGrid');
-    const gameQuestionOverlay = document.getElementById('gameQuestionOverlay');
-    const winningCombos = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-      [0, 4, 8], [2, 4, 6]            // Diagonals
-    ];
 
-    document.getElementById('startTicTacToeBtn').addEventListener('click', () => {
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    const teacherManagerModal = document.getElementById('teacherManagerModal');
+    const teacherRoomsContainer = document.getElementById('teacherRoomsContainer');
+    const noTeacherRoomsState = document.getElementById('noTeacherRoomsState');
+
+    document.getElementById('openTeacherManagerBtn').addEventListener('click', () => {
       if (questionsList.length === 0) {
-        showToast('Please add or import questions into this collection before playing!', 'warning');
+        showToast('Please add or import questions into this collection first!', 'warning');
         return;
       }
-      openTicTacToeGame();
+      teacherManagerModal.classList.remove('hidden');
+      listenToTeacherRooms();
     });
 
-    document.getElementById('closeTicTacToeModalBtn').addEventListener('click', () => ticTacToeModal.classList.add('hidden'));
-    document.getElementById('exitTttBtn').addEventListener('click', () => ticTacToeModal.classList.add('hidden'));
-    document.getElementById('resetTttBtn').addEventListener('click', () => resetTttBoard());
+    document.getElementById('closeTeacherManagerModalBtn').addEventListener('click', () => teacherManagerModal.classList.add('hidden'));
+    document.getElementById('exitTeacherManagerBtn').addEventListener('click', () => teacherManagerModal.classList.add('hidden'));
 
-    function openTicTacToeGame() {
-      resetTttBoard();
-      ticTacToeModal.classList.remove('hidden');
+    function listenToTeacherRooms() {
+      if (!currentUser || currentUser.isAnonymous || !currentCollectionId) return;
+
+      if (unsubscribeTeacherRooms) unsubscribeTeacherRooms();
+
+      const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions');
+      
+      unsubscribeTeacherRooms = onSnapshot(sessionsRef, (snapshot) => {
+        const rooms = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.teacherUid === currentUser.uid && data.collectionId === currentCollectionId) {
+            rooms.push({ id: docSnap.id, ...data });
+          }
+        });
+
+        rooms.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        renderTeacherRooms(rooms);
+      });
     }
 
-    function resetTttBoard() {
-      tttBoard = Array(9).fill(null);
-      tttCurrentPlayer = 'X';
-      tttPendingCell = null;
-      tttCurrentLevel = 5;
-      gameQuestionOverlay.classList.add('hidden');
-      renderTttBoard();
-      updateTttHeader();
+    function renderTeacherRooms(rooms) {
+      document.getElementById('teacherRoomCount').innerText = rooms.length;
+      teacherRoomsContainer.innerHTML = '';
+
+      if (rooms.length === 0) {
+        noTeacherRoomsState.classList.remove('hidden');
+      } else {
+        noTeacherRoomsState.classList.add('hidden');
+
+        rooms.forEach((r) => {
+          const card = document.createElement('div');
+          card.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3 relative hover:shadow-sm transition";
+
+          const p1Name = r.playerX ? r.playerX.name : '<i>Empty (Player X)</i>';
+          const p2Name = r.playerO ? r.playerO.name : '<i>Empty (Player O)</i>';
+
+          let statusBadge = '';
+          if (r.playerX && r.playerO) {
+            statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">2/2 Players (In Progress)</span>';
+          } else if (r.playerX || r.playerO) {
+            statusBadge = '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">1/2 Players Joined</span>';
+          } else {
+            statusBadge = '<span class="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">0/2 Players (Waiting)</span>';
+          }
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 block">Game Code</span>
+                <span class="text-xl font-black text-indigo-900 font-mono tracking-widest">${r.code}</span>
+              </div>
+              ${statusBadge}
+            </div>
+
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs space-y-1">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-slate-700 flex items-center gap-1">
+                  <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block text-[9px] text-white text-center leading-3">X</span> ${p1Name}
+                </span>
+                <span class="font-bold text-indigo-600">${r.scores?.X || 0} Wins</span>
+              </div>
+              <div class="flex justify-between items-center border-t border-slate-100 pt-1">
+                <span class="font-bold text-slate-700 flex items-center gap-1">
+                  <span class="w-3 h-3 rounded-full bg-rose-500 inline-block text-[9px] text-white text-center leading-3">O</span> ${p2Name}
+                </span>
+                <span class="font-bold text-rose-600">${r.scores?.O || 0} Wins</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <button class="copy-code-btn px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition" data-code="${r.code}">
+                <i class="fa-solid fa-copy mr-1"></i> Copy Code
+              </button>
+              <div class="flex items-center space-x-1">
+                <button class="reset-room-btn p-1.5 text-slate-400 hover:text-amber-600 rounded-lg text-xs" data-id="${r.id}" title="Reset Board">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button class="delete-room-btn p-1.5 text-slate-400 hover:text-rose-600 rounded-lg text-xs" data-id="${r.id}" title="Delete Room">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+
+          teacherRoomsContainer.appendChild(card);
+        });
+
+        document.querySelectorAll('.copy-code-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const code = e.currentTarget.dataset.code;
+            navigator.clipboard.writeText(code);
+            showToast(`Room code ${code} copied to clipboard!`, 'info');
+          });
+        });
+
+        document.querySelectorAll('.reset-room-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.dataset.id;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', id);
+            await updateDoc(ref, {
+              board: Array(9).fill(null),
+              turn: 'X',
+              currentChallenge: null,
+              updatedAt: serverTimestamp()
+            });
+            showToast('Room board reset.', 'info');
+          });
+        });
+
+        document.querySelectorAll('.delete-room-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.dataset.id;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', id);
+            await deleteDoc(ref);
+            showToast('Room removed.', 'info');
+          });
+        });
+      }
     }
 
-    function updateTttHeader() {
+    async function createTeacherRoom() {
+      if (!currentUser || currentUser.isAnonymous || !currentCollectionId) return;
+
+      try {
+        const code = generateRoomCode();
+        const colTitle = document.getElementById('currentCollectionTitle').innerText || 'Question Bank';
+        const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions');
+
+        await addDoc(sessionsRef, {
+          code,
+          collectionTitle: colTitle,
+          collectionId: currentCollectionId,
+          teacherUid: currentUser.uid,
+          questions: questionsList,
+          playerX: null,
+          playerO: null,
+          status: 'waiting',
+          turn: 'X',
+          board: Array(9).fill(null),
+          scores: { X: 0, O: 0 },
+          currentChallenge: null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        showToast(`Created Game Room Code: ${code}`, 'success');
+      } catch (err) {
+        showToast('Error creating room: ' + err.message, 'error');
+      }
+    }
+
+    document.getElementById('createSingleRoomBtn').addEventListener('click', () => createTeacherRoom());
+    
+    document.getElementById('createBatch5RoomsBtn').addEventListener('click', async () => {
+      for (let i = 0; i < 5; i++) {
+        await createTeacherRoom();
+      }
+      showToast('Generated 5 Room Codes!', 'success');
+    });
+
+    document.getElementById('deleteAllTeacherRoomsBtn').addEventListener('click', () => {
+      showConfirmModal('Clear All Active Rooms', 'Are you sure you want to delete all active room codes for this collection?', async () => {
+        const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions');
+        const snapshot = await getDocs(sessionsRef);
+        const batch = writeBatch(db);
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.teacherUid === currentUser.uid && data.collectionId === currentCollectionId) {
+            batch.delete(docSnap.ref);
+          }
+        });
+
+        await batch.commit();
+        showToast('All active rooms deleted.', 'info');
+      });
+    });
+
+
+    // =========================================================
+    // STUDENT JOINING & GAMEPLAY (AUTOMATED ROLE PAIRING)
+    // =========================================================
+
+    const joinGameModal = document.getElementById('joinGameModal');
+    const ticTacToeModal = document.getElementById('ticTacToeModal');
+
+    document.getElementById('openJoinModalBtn').addEventListener('click', () => {
+      document.getElementById('joinCodeInput').value = '';
+      document.getElementById('joinPlayerNameInput').value = myStudentName || '';
+      joinGameModal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeJoinGameModalBtn').addEventListener('click', () => joinGameModal.classList.add('hidden'));
+    document.getElementById('cancelJoinGameBtn').addEventListener('click', () => joinGameModal.classList.add('hidden'));
+
+    document.getElementById('joinGameForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const inputCode = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+      const studentName = document.getElementById('joinPlayerNameInput').value.trim();
+
+      if (!inputCode || !studentName) return;
+
+      myStudentName = studentName;
+
+      try {
+        const user = await ensureAuth();
+        if (!user) return;
+
+        const sessionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions');
+        const snapshot = await getDocs(sessionsRef);
+
+        let targetDoc = null;
+        snapshot.forEach((d) => {
+          const data = d.data();
+          if (data.code === inputCode) {
+            targetDoc = { id: d.id, ...data };
+          }
+        });
+
+        if (!targetDoc) {
+          showToast('Invalid Game Code. Please ask your teacher for the correct code.', 'error');
+          return;
+        }
+
+        const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', targetDoc.id);
+
+        if (!targetDoc.playerX) {
+          myRole = 'X';
+          await updateDoc(sessionDocRef, {
+            playerX: { uid: user.uid, name: studentName },
+            status: targetDoc.playerO ? 'active' : 'waiting',
+            updatedAt: serverTimestamp()
+          });
+        } else if (!targetDoc.playerO) {
+          myRole = 'O';
+          await updateDoc(sessionDocRef, {
+            playerO: { uid: user.uid, name: studentName },
+            status: 'active',
+            updatedAt: serverTimestamp()
+          });
+        } else {
+          // Re-entry check if student reloads
+          if (targetDoc.playerX.uid === user.uid) {
+            myRole = 'X';
+          } else if (targetDoc.playerO.uid === user.uid) {
+            myRole = 'O';
+          } else {
+            showToast('This room is already full (2 students connected)!', 'warning');
+            return;
+          }
+        }
+
+        currentSessionId = targetDoc.id;
+        joinGameModal.classList.add('hidden');
+        subscribeToSession(currentSessionId);
+        ticTacToeModal.classList.remove('hidden');
+        showToast(`Connected as Player ${myRole}!`, 'success');
+      } catch (err) {
+        showToast('Failed to join game room: ' + err.message, 'error');
+      }
+    });
+
+    function subscribeToSession(sessionId) {
+      if (unsubscribeSession) unsubscribeSession();
+
+      const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', sessionId);
+
+      unsubscribeSession = onSnapshot(sessionDocRef, (docSnap) => {
+        if (!docSnap.exists()) {
+          showToast('Game room was closed by teacher.', 'warning');
+          ticTacToeModal.classList.add('hidden');
+          return;
+        }
+
+        currentSessionData = docSnap.data();
+        syncSessionToUI(currentSessionData);
+      }, (error) => {
+        showToast('Sync error: ' + error.message, 'error');
+      });
+    }
+
+    function syncSessionToUI(s) {
+      document.getElementById('displayRoomCode').innerText = s.code || 'XXXXXX';
+      document.getElementById('tttCollectionSubtitle').innerText = `Subject: ${s.collectionTitle || 'Question Bank'}`;
+
+      const myRoleBadge = document.getElementById('myRoleBadge');
+      if (myRole === 'X') {
+        myRoleBadge.className = "px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow-sm";
+        myRoleBadge.innerText = `You are: Player X (${myStudentName})`;
+      } else {
+        myRoleBadge.className = "px-3 py-1 bg-rose-500 text-white font-bold text-xs rounded-lg shadow-sm";
+        myRoleBadge.innerText = `You are: Player O (${myStudentName})`;
+      }
+
+      const playerXName = s.playerX ? s.playerX.name : 'Waiting...';
+      const playerOName = s.playerO ? s.playerO.name : 'Waiting...';
+
+      document.getElementById('playerXName').innerText = playerXName;
+      document.getElementById('playerOName').innerText = playerOName;
+      document.getElementById('scoreX').innerText = `Wins: ${s.scores?.X || 0}`;
+      document.getElementById('scoreO').innerText = `Wins: ${s.scores?.O || 0}`;
+
+      if (s.questions && Array.isArray(s.questions) && s.questions.length > 0) {
+        questionsList = s.questions;
+      }
+
+      const waitingBanner = document.getElementById('waitingForPlayerBanner');
+      if (!s.playerX || !s.playerO) {
+        waitingBanner.classList.remove('hidden');
+      } else {
+        waitingBanner.classList.add('hidden');
+      }
+
       const turnBadge = document.getElementById('turnBadge');
       const cardX = document.getElementById('playerXCard');
       const cardO = document.getElementById('playerOCard');
 
-      document.getElementById('scoreX').innerText = `Wins: ${tttScores.X}`;
-      document.getElementById('scoreO').innerText = `Wins: ${tttScores.O}`;
+      tttBoard = s.board || Array(9).fill(null);
+      tttCurrentPlayer = s.turn || 'X';
 
       if (tttCurrentPlayer === 'X') {
-        turnBadge.className = "px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-sm";
-        turnBadge.innerText = "Player X's Turn";
-        cardX.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-indigo-300 bg-indigo-50";
-        cardO.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-transparent";
+        turnBadge.className = "px-2.5 py-1 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-sm";
+        turnBadge.innerText = `${playerXName}'s Turn (X)`;
+        cardX.className = "flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-indigo-300 bg-indigo-50";
+        cardO.className = "flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-transparent";
       } else {
-        turnBadge.className = "px-3 py-1 bg-rose-600 text-white font-bold text-xs rounded-full shadow-sm";
-        turnBadge.innerText = "Player O's Turn";
-        cardO.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-rose-300 bg-rose-50";
-        cardX.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition border-transparent";
+        turnBadge.className = "px-2.5 py-1 bg-rose-600 text-white font-bold text-xs rounded-full shadow-sm";
+        turnBadge.innerText = `${playerOName}'s Turn (O)`;
+        cardO.className = "flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-rose-300 bg-rose-50";
+        cardX.className = "flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition border-transparent";
+      }
+
+      renderTttBoard();
+
+      const gameQuestionOverlay = document.getElementById('gameQuestionOverlay');
+      if (s.currentChallenge && !s.currentChallenge.completed) {
+        renderChallengeOverlay(s.currentChallenge);
+      } else {
+        gameQuestionOverlay.classList.add('hidden');
+      }
+    }
+
+    const tttGrid = document.getElementById('tttGrid');
+    const winningCombos = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    document.getElementById('closeTicTacToeModalBtn').addEventListener('click', () => {
+      if (unsubscribeSession) unsubscribeSession();
+      ticTacToeModal.classList.add('hidden');
+    });
+
+    document.getElementById('exitTttBtn').addEventListener('click', () => {
+      if (unsubscribeSession) unsubscribeSession();
+      ticTacToeModal.classList.add('hidden');
+    });
+
+    document.getElementById('resetTttBtn').addEventListener('click', () => resetTttBoard());
+
+    async function resetTttBoard() {
+      if (!currentSessionId) return;
+      try {
+        const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
+        await updateDoc(sessionDocRef, {
+          board: Array(9).fill(null),
+          turn: 'X',
+          currentChallenge: null,
+          updatedAt: serverTimestamp()
+        });
+        showToast('Board reset.', 'info');
+      } catch (err) {
+        showToast('Failed to reset board: ' + err.message, 'error');
       }
     }
 
@@ -1617,35 +2000,42 @@
           btn.innerText = idx + 1;
         }
 
-        btn.disabled = val !== null;
-        btn.addEventListener('click', () => initiateCellChallenge(idx));
+        btn.disabled = val !== null || !currentSessionData?.playerX || !currentSessionData?.playerO;
+        btn.addEventListener('click', () => handleCellClick(idx));
         tttGrid.appendChild(btn);
       });
     }
 
-    function initiateCellChallenge(cellIdx) {
+    async function handleCellClick(cellIdx) {
+      if (!currentSessionData) return;
+
+      if (!currentSessionData.playerX || !currentSessionData.playerO) {
+        showToast('Waiting for Student 2 to join!', 'warning');
+        return;
+      }
+
+      if (myRole !== tttCurrentPlayer) {
+        showToast(`It is currently Player ${tttCurrentPlayer}'s turn!`, 'warning');
+        return;
+      }
+
       tttPendingCell = cellIdx;
       
       const modeSelect = document.getElementById('tttQuestionMode');
       const mode = modeSelect ? modeSelect.value : 'winOnly';
-
       const isWinOpportunity = wouldWin(tttBoard, cellIdx, tttCurrentPlayer);
 
-      // If mode is "winOnly" and this move is NOT a winning move, claim directly without a question
       if (mode === 'winOnly' && !isWinOpportunity) {
-        claimSquare(cellIdx);
+        await claimSquare(cellIdx);
         return;
       }
 
       tttCurrentLevel = 5;
-      serveQuestionChallenge(isWinOpportunity);
+      await createQuestionChallenge(cellIdx, isWinOpportunity);
     }
 
-    function serveQuestionChallenge(isWinOpportunity = false) {
-      // Look for a question matching current target level
+    async function createQuestionChallenge(cellIdx, isWinOpportunity) {
       let pool = questionsList.filter(q => Number(q.level) === tttCurrentLevel);
-      
-      // Fallback if target level is missing in bank
       if (pool.length === 0) {
         let fallbackLevel = tttCurrentLevel - 1;
         while (fallbackLevel >= 2 && pool.length === 0) {
@@ -1654,19 +2044,33 @@
           fallbackLevel--;
         }
       }
+      if (pool.length === 0) pool = questionsList;
 
-      // Final fallback if still empty: pick any question
-      if (pool.length === 0) {
-        pool = questionsList;
-      }
+      const q = pool[Math.floor(Math.random() * pool.length)];
 
-      // Select random question from pool
-      tttCurrentQuestion = pool[Math.floor(Math.random() * pool.length)];
+      const challengeData = {
+        cellIdx,
+        player: tttCurrentPlayer,
+        question: q,
+        level: q.level || tttCurrentLevel,
+        isWinOpportunity,
+        completed: false
+      };
 
-      // UI updates
+      const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
+      await updateDoc(sessionDocRef, {
+        currentChallenge: challengeData,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    function renderChallengeOverlay(challenge) {
+      tttCurrentQuestion = challenge.question;
+      tttPendingCell = challenge.cellIdx;
+
       const banner = document.getElementById('winOpportunityBanner');
       if (banner) {
-        if (isWinOpportunity) {
+        if (challenge.isWinOpportunity) {
           banner.classList.remove('hidden');
         } else {
           banner.classList.add('hidden');
@@ -1676,7 +2080,7 @@
       const badgeLevel = document.getElementById('challengeLevelBadge');
       const badgePlayer = document.getElementById('challengePlayerBadge');
       
-      badgeLevel.innerText = `Level ${tttCurrentQuestion.level || tttCurrentLevel}`;
+      badgeLevel.innerText = `Level ${tttCurrentQuestion.level || challenge.level}`;
       const levelColors = {
         5: 'bg-rose-100 text-rose-800 border-rose-200',
         4: 'bg-purple-100 text-purple-800 border-purple-200',
@@ -1685,28 +2089,32 @@
       };
       badgeLevel.className = `text-xs font-bold px-2.5 py-1 rounded-full border ${levelColors[tttCurrentQuestion.level] || levelColors[2]}`;
 
-      if (tttCurrentPlayer === 'X') {
-        badgePlayer.innerText = "Player X's Challenge";
+      const activePlayerName = challenge.player === 'X' ? (currentSessionData.playerX?.name || 'Player X') : (currentSessionData.playerO?.name || 'Player O');
+
+      if (challenge.player === 'X') {
+        badgePlayer.innerText = `${activePlayerName}'s Challenge`;
         badgePlayer.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800";
       } else {
-        badgePlayer.innerText = "Player O's Challenge";
+        badgePlayer.innerText = `${activePlayerName}'s Challenge`;
         badgePlayer.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800";
       }
 
-      document.getElementById('cellTargetName').innerText = `#${tttPendingCell + 1}`;
+      document.getElementById('cellTargetName').innerText = `#${challenge.cellIdx + 1}`;
       document.getElementById('challengeQuestionText').innerText = tttCurrentQuestion.questionText;
 
       const feedback = document.getElementById('challengeFeedback');
       feedback.classList.add('hidden');
 
-      // Render Options
       const optionsContainer = document.getElementById('challengeOptionsContainer');
       optionsContainer.innerHTML = '';
       const letters = ['A', 'B', 'C', 'D'];
 
+      const isMyTurn = myRole === challenge.player;
+
       (tttCurrentQuestion.options || []).forEach((opt, idx) => {
         const optBtn = document.createElement('button');
-        optBtn.className = "w-full p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 text-left text-xs font-semibold text-slate-800 flex items-center space-x-2 transition";
+        optBtn.className = "w-full p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 text-left text-xs font-semibold text-slate-800 flex items-center space-x-2 transition disabled:opacity-60";
+        optBtn.disabled = !isMyTurn;
         optBtn.innerHTML = `
           <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">${letters[idx]}</span>
           <span class="flex-1">${escapeHtml(opt)}</span>
@@ -1715,10 +2123,12 @@
         optionsContainer.appendChild(optBtn);
       });
 
-      gameQuestionOverlay.classList.remove('hidden');
+      document.getElementById('gameQuestionOverlay').classList.remove('hidden');
     }
 
-    function handleAnswerSubmission(selectedIdx) {
+    async function handleAnswerSubmission(selectedIdx) {
+      if (myRole !== tttCurrentPlayer) return;
+
       const isCorrect = selectedIdx === Number(tttCurrentQuestion.correctAnswer);
       const feedback = document.getElementById('challengeFeedback');
       feedback.classList.remove('hidden');
@@ -1727,9 +2137,8 @@
         feedback.className = "p-2 rounded-lg text-xs font-bold text-center mt-2 bg-emerald-100 text-emerald-800 border border-emerald-200";
         feedback.innerText = "Correct! Square claimed.";
 
-        setTimeout(() => {
-          gameQuestionOverlay.classList.add('hidden');
-          claimSquare(tttPendingCell);
+        setTimeout(async () => {
+          await claimSquare(tttPendingCell);
         }, 1000);
       } else {
         if (tttCurrentLevel > 2) {
@@ -1737,48 +2146,50 @@
           feedback.className = "p-2 rounded-lg text-xs font-bold text-center mt-2 bg-amber-100 text-amber-800 border border-amber-200";
           feedback.innerText = `Incorrect! Downgrading to Level ${tttCurrentLevel}...`;
 
-          setTimeout(() => {
-            serveQuestionChallenge();
+          setTimeout(async () => {
+            await createQuestionChallenge(tttPendingCell, currentSessionData.currentChallenge?.isWinOpportunity);
           }, 1200);
         } else {
-          // Level 2 incorrect -> forfeit turn
           feedback.className = "p-2 rounded-lg text-xs font-bold text-center mt-2 bg-rose-100 text-rose-800 border border-rose-200";
           feedback.innerText = "Incorrect at Level 2! Turn forfeited.";
 
-          setTimeout(() => {
-            gameQuestionOverlay.classList.add('hidden');
-            tttCurrentPlayer = tttCurrentPlayer === 'X' ? 'O' : 'X';
-            updateTttHeader();
+          setTimeout(async () => {
+            const nextTurn = tttCurrentPlayer === 'X' ? 'O' : 'X';
+            const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
+            await updateDoc(sessionDocRef, {
+              turn: nextTurn,
+              currentChallenge: null,
+              updatedAt: serverTimestamp()
+            });
           }, 1200);
         }
       }
     }
 
-    function claimSquare(cellIdx) {
-      tttBoard[cellIdx] = tttCurrentPlayer;
-      renderTttBoard();
+    async function claimSquare(cellIdx) {
+      const updatedBoard = [...tttBoard];
+      updatedBoard[cellIdx] = tttCurrentPlayer;
 
-      if (checkTttWinner()) {
-        tttScores[tttCurrentPlayer]++;
-        updateTttHeader();
-        showToast(`Player ${tttCurrentPlayer} wins the round!`, 'success');
-        return;
-      }
+      const newScores = { ...currentSessionData.scores };
+      let nextTurn = tttCurrentPlayer === 'X' ? 'O' : 'X';
 
-      if (tttBoard.every(cell => cell !== null)) {
-        showToast("It's a draw!", 'warning');
-        return;
-      }
-
-      // Switch turn
-      tttCurrentPlayer = tttCurrentPlayer === 'X' ? 'O' : 'X';
-      updateTttHeader();
-    }
-
-    function checkTttWinner() {
-      return winningCombos.some(combo => {
+      const isWinner = winningCombos.some(combo => {
         const [a, b, c] = combo;
-        return tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[a] === tttBoard[c];
+        return updatedBoard[a] && updatedBoard[a] === updatedBoard[b] && updatedBoard[a] === updatedBoard[c];
+      });
+
+      if (isWinner) {
+        newScores[tttCurrentPlayer] = (newScores[tttCurrentPlayer] || 0) + 1;
+        showToast(`Player ${tttCurrentPlayer} (${myStudentName}) wins the round!`, 'success');
+      }
+
+      const sessionDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'ttt_sessions', currentSessionId);
+      await updateDoc(sessionDocRef, {
+        board: updatedBoard,
+        scores: newScores,
+        turn: nextTurn,
+        currentChallenge: null,
+        updatedAt: serverTimestamp()
       });
     }
   </script>
